@@ -59,10 +59,10 @@ export async function GET(
       shotsOnTarget: player.shotsOnTarget || 0,
       dribbles: player.dribbles || 0,
       crosses: player.crosses || 0,
-      corners: player.corners || 0,
-      freekicks: player.freekicks || 0,
-      penalties: player.penalties || 0,
-      penaltiesScored: player.penaltiesScored || 0,
+      corners: 0, // Non défini dans Prisma
+      freekicks: 0, // Non défini dans Prisma
+      penalties: 0, // Non défini dans Prisma
+      penaltiesScored: 0, // Non défini dans Prisma
       
       // Stats défensives
       tackles: player.tackles || 0,
@@ -70,7 +70,7 @@ export async function GET(
       clearances: player.clearances || 0,
       aerialDuelsWon: player.aerialDuelsWon || 0,
       foulsCommitted: player.foulsCommitted || 0,
-      foulsWon: player.foulsWon || 0,
+      foulsWon: 0, // Non défini dans Prisma
       
       // Stats gardien
       saves: player.saves || 0,
@@ -78,7 +78,7 @@ export async function GET(
       cleanSheets: player.cleanSheets || 0,
       catches: player.catches || 0,
       penaltiesSaved: player.penaltiesSaved || 0,
-      penaltiesFaced: player.penaltiesFaced || 0,
+      penaltiesFaced: 0, // Non défini dans Prisma
       
       // Cartons et récompenses
       yellowCards: player.yellowCards || 0,
@@ -86,21 +86,21 @@ export async function GET(
       manOfTheMatch: player.manOfTheMatch || 0,
       
       // Stats de passes
-      passesCompleted: player.passesCompleted || 0,
-      passesAttempted: player.passesAttempted || 0,
-      longPasses: player.longPasses || 0,
-      throughBalls: player.throughBalls || 0,
-      keyPasses: player.keyPasses || 0,
+      passesCompleted: 0, // Non défini dans Prisma
+      passesAttempted: 0, // Non défini dans Prisma
+      longPasses: 0, // Non défini dans Prisma
+      throughBalls: 0, // Non défini dans Prisma
+      keyPasses: 0, // Non défini dans Prisma
       
       // Stats physiques
-      distanceRun: player.distanceRun || 0,
-      topSpeed: player.topSpeed || 0,
-      sprints: player.sprints || 0,
+      distanceRun: 0, // Non défini dans Prisma
+      topSpeed: 0, // Non défini dans Prisma
+      sprints: 0, // Non défini dans Prisma
       
       // Stats de performance
-      form: player.form || 0,
-      consistency: player.consistency || 0,
-      clutchGoals: player.clutchGoals || 0
+      form: 0, // Non défini dans Prisma
+      consistency: 0, // Non défini dans Prisma
+      clutchGoals: 0 // Non défini dans Prisma
     };
     
     console.log(`✅ Stats détaillées récupérées pour ${player.name}`);

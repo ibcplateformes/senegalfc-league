@@ -1,0 +1,54 @@
+-- Migration pour Render PostgreSQL - Système automatique adapté de ClubStats Pro
+-- Ajouter les nouvelles statistiques à la structure existante
+
+-- Étendre la table players avec toutes les stats automatiques
+ALTER TABLE "players" ADD COLUMN IF NOT EXISTS "shot_accuracy" REAL NOT NULL DEFAULT 0;
+ALTER TABLE "players" ADD COLUMN IF NOT EXISTS "dribble_success" REAL NOT NULL DEFAULT 0;
+ALTER TABLE "players" ADD COLUMN IF NOT EXISTS "cross_accuracy" REAL NOT NULL DEFAULT 0;
+ALTER TABLE "players" ADD COLUMN IF NOT EXISTS "corners" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "players" ADD COLUMN IF NOT EXISTS "freekicks" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "players" ADD COLUMN IF NOT EXISTS "penalties" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "players" ADD COLUMN IF NOT EXISTS "penalties_scored" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "players" ADD COLUMN IF NOT EXISTS "tackle_success" REAL NOT NULL DEFAULT 0;
+ALTER TABLE "players" ADD COLUMN IF NOT EXISTS "blocks" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "players" ADD COLUMN IF NOT EXISTS "aerial_duels_total" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "players" ADD COLUMN IF NOT EXISTS "fouls_won" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "players" ADD COLUMN IF NOT EXISTS "punches" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "players" ADD COLUMN IF NOT EXISTS "distributions" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "players" ADD COLUMN IF NOT EXISTS "distribution_success" REAL NOT NULL DEFAULT 0;
+ALTER TABLE "players" ADD COLUMN IF NOT EXISTS "penalties_faced" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "players" ADD COLUMN IF NOT EXISTS "distance_run" REAL NOT NULL DEFAULT 0;
+ALTER TABLE "players" ADD COLUMN IF NOT EXISTS "top_speed" REAL NOT NULL DEFAULT 0;
+ALTER TABLE "players" ADD COLUMN IF NOT EXISTS "sprints" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "players" ADD COLUMN IF NOT EXISTS "passes_completed" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "players" ADD COLUMN IF NOT EXISTS "passes_attempted" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "players" ADD COLUMN IF NOT EXISTS "pass_accuracy" REAL NOT NULL DEFAULT 0;
+ALTER TABLE "players" ADD COLUMN IF NOT EXISTS "long_passes" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "players" ADD COLUMN IF NOT EXISTS "long_pass_accuracy" REAL NOT NULL DEFAULT 0;
+ALTER TABLE "players" ADD COLUMN IF NOT EXISTS "through_balls" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "players" ADD COLUMN IF NOT EXISTS "key_passes" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "players" ADD COLUMN IF NOT EXISTS "form" REAL NOT NULL DEFAULT 0;
+ALTER TABLE "players" ADD COLUMN IF NOT EXISTS "consistency" REAL NOT NULL DEFAULT 0;
+ALTER TABLE "players" ADD COLUMN IF NOT EXISTS "clutch_goals" INTEGER NOT NULL DEFAULT 0;
+
+-- Étendre player_match_stats avec les nouvelles stats de match
+ALTER TABLE "player_match_stats" ADD COLUMN IF NOT EXISTS "corners" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "player_match_stats" ADD COLUMN IF NOT EXISTS "freekicks" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "player_match_stats" ADD COLUMN IF NOT EXISTS "blocks" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "player_match_stats" ADD COLUMN IF NOT EXISTS "fouls_won" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "player_match_stats" ADD COLUMN IF NOT EXISTS "punches" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "player_match_stats" ADD COLUMN IF NOT EXISTS "distributions" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "player_match_stats" ADD COLUMN IF NOT EXISTS "distance_run" REAL NOT NULL DEFAULT 0;
+ALTER TABLE "player_match_stats" ADD COLUMN IF NOT EXISTS "top_speed" REAL NOT NULL DEFAULT 0;
+ALTER TABLE "player_match_stats" ADD COLUMN IF NOT EXISTS "sprints" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "player_match_stats" ADD COLUMN IF NOT EXISTS "passes_completed" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "player_match_stats" ADD COLUMN IF NOT EXISTS "passes_attempted" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "player_match_stats" ADD COLUMN IF NOT EXISTS "long_passes" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "player_match_stats" ADD COLUMN IF NOT EXISTS "through_balls" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "player_match_stats" ADD COLUMN IF NOT EXISTS "key_passes" INTEGER NOT NULL DEFAULT 0;
+
+-- Index pour optimiser les requêtes
+CREATE INDEX IF NOT EXISTS "players_goals_idx" ON "players"("goals");
+CREATE INDEX IF NOT EXISTS "players_assists_idx" ON "players"("assists");
+CREATE INDEX IF NOT EXISTS "players_rating_idx" ON "players"("average_rating");
+CREATE INDEX IF NOT EXISTS "player_match_stats_rating_idx" ON "player_match_stats"("rating");

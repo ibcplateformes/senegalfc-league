@@ -1,0 +1,212 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Clubs participants à la ligue
+model LeagueClub {
+  id          String   @id @default(cuid())
+  name        String   // "HOF 221"
+  eaClubId    String   @unique // "40142"
+  platform    String   // "ps5", "xbox", "pc"
+  active      Boolean  @default(true)
+  
+  // Stats calculées automatiquement
+  points       Int      @default(0)
+  wins         Int      @default(0)
+  draws        Int      @default(0)
+  losses       Int      @default(0)
+  goalsFor     Int      @default(0)
+  goalsAgainst Int      @default(0)
+  
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  homeMatches  LeagueMatch[] @relation("HomeClub")
+  awayMatches  LeagueMatch[] @relation("AwayClub")
+  players      Player[]      // 🆕 Joueurs du club
+
+  @@index([eaClubId])
+  @@index([active])
+  @@map("league_clubs")
+}
+
+// 🆕 Joueurs individuels
+model Player {
+  id           String   @id @default(cuid())
+  clubId       String   @map("club_id")
+  
+  // Informations du joueur
+  name         String   // Nom dans EA Sports
+  position     String   // "GK", "DEF", "MID", "ATT"
+  number       Int?     // Numéro de maillot
+  eaPlayerId   String?  @unique @map("ea_player_id") // ID EA Sports si disponible
+  
+  // Stats de saison (calculées automatiquement)
+  matchesPlayed    Int @default(0) @map("matches_played")
+  minutesPlayed    Int @default(0) @map("minutes_played")
+  
+  // Stats offensives
+  goals            Int @default(0)
+  assists          Int @default(0)
+  shots            Int @default(0)
+  shotsOnTarget    Int @default(0) @map("shots_on_target")
+  dribbles         Int @default(0)
+  crosses          Int @default(0)
+  
+  // Stats défensives  
+  tackles          Int @default(0)
+  interceptions    Int @default(0)
+  clearances       Int @default(0)
+  aerialDuelsWon   Int @default(0) @map("aerial_duels_won")
+  foulsCommitted   Int @default(0) @map("fouls_committed")
+  
+  // Stats gardien
+  saves            Int @default(0)
+  goalsConceded    Int @default(0) @map("goals_conceded")
+  cleanSheets      Int @default(0) @map("clean_sheets")
+  catches          Int @default(0)
+  penaltiesSaved   Int @default(0) @map("penalties_saved")
+  
+  // Divers
+  averageRating    Float @default(0) @map("average_rating")
+  yellowCards      Int @default(0) @map("yellow_cards")
+  redCards         Int @default(0) @map("red_cards")
+  manOfTheMatch    Int @default(0) @map("man_of_the_match")
+  
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  club             LeagueClub @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  matchStats       PlayerMatchStats[] // Stats par match
+
+  @@index([clubId])
+  @@index([position])
+  @@index([name])
+  @@map("players")
+}
+
+// 🆕 Statistiques par match pour chaque joueur
+model PlayerMatchStats {
+  id           String   @id @default(cuid())
+  playerId     String   @map("player_id")
+  matchId      String   @map("match_id")
+  
+  // Infos générales du match
+  minutesPlayed    Int @default(0) @map("minutes_played")
+  rating           Float? // Note du joueur (0-10)
+  starter          Boolean @default(false) // Titulaire ou remplaçant
+  
+  // Stats offensives
+  goals            Int @default(0)
+  assists          Int @default(0)
+  shots            Int @default(0)
+  shotsOnTarget    Int @default(0) @map("shots_on_target")
+  dribbles         Int @default(0)
+  crosses          Int @default(0)
+  
+  // Stats défensives
+  tackles          Int @default(0)
+  interceptions    Int @default(0)
+  clearances       Int @default(0)
+  aerialDuelsWon   Int @default(0) @map("aerial_duels_won")
+  foulsCommitted   Int @default(0) @map("fouls_committed")
+  
+  // Stats gardien
+  saves            Int @default(0)
+  goalsConceded    Int @default(0) @map("goals_conceded")
+  cleanSheet       Boolean @default(false) @map("clean_sheet")
+  catches          Int @default(0)
+  
+  // Cartons
+  yellowCard       Boolean @default(false) @map("yellow_card")
+  redCard          Boolean @default(false) @map("red_card")
+  manOfTheMatch    Boolean @default(false) @map("man_of_the_match")
+  
+  createdAt        DateTime @default(now()) @map("created_at")
+  
+  // Relations
+  player           Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  match            LeagueMatch @relation(fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, matchId])
+  @@index([playerId])
+  @@index([matchId])
+  @@index([goals])
+  @@index([assists])
+  @@map("player_match_stats")
+}
+
+// Matchs de la ligue (inter-clubs) - 🆕 avec relation aux stats joueurs
+model LeagueMatch {
+  id          String   @id @default(cuid())
+  homeClubId  String   @map("home_club_id")
+  awayClubId  String   @map("away_club_id")
+  
+  homeScore   Int
+  awayScore   Int
+  playedAt    DateTime @map("played_at")
+  
+  // Validation par les admins
+  validated   Boolean  @default(false)
+  notes       String?  // Si correction manuelle
+  
+  // Traçabilité EA Sports
+  eaMatchId   String?  @unique @map("ea_match_id")
+  detectedAt  DateTime @default(now()) @map("detected_at")
+  
+  // Relations
+  homeClub    LeagueClub @relation("HomeClub", fields: [homeClubId], references: [id], onDelete: Cascade)
+  awayClub    LeagueClub @relation("AwayClub", fields: [awayClubId], references: [id], onDelete: Cascade)
+  playerStats PlayerMatchStats[] // 🆕 Stats individuelles du match
+
+  @@index([homeClubId])
+  @@index([awayClubId])
+  @@index([playedAt])
+  @@index([validated])
+  @@map("league_matches")
+}
+
+// Annonces de la ligue
+model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  content   String   @db.Text
+  type      String   @default("info") // "info", "results", "important", "warning"
+  published Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([published])
+  @@index([createdAt])
+  @@map("announcements")
+}
+
+// Configuration de la ligue
+model LeagueConfig {
+  id            String   @id @default(cuid())
+  leagueName    String   @default("Ligue Sénégalaise FC") @map("league_name")
+  season        String   @default("2025")
+  autoSync      Boolean  @default(true) @map("auto_sync")
+  syncInterval  Int      @default(7200) @map("sync_interval") // en secondes (2h par défaut)
+  lastSync      DateTime? @map("last_sync")
+  
+  // Règles de points
+  pointsWin     Int      @default(3) @map("points_win")
+  pointsDraw    Int      @default(1) @map("points_draw")
+  pointsLoss    Int      @default(0) @map("points_loss")
+  
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("league_config")
+}

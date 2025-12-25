@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { EAFCApiService } from 'eafc-clubs-api';
+import { fetchClubInfo } from '@/lib/ea-sports';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,127 +17,63 @@ export async function POST(request: NextRequest) {
     console.log(`🔍 Recherche club EA Sports: "${query}" (type: ${type})`);
 
     if (type === 'id') {
-      // Recherche par EA Club ID avec vraie API et extraction corrigée
+      // Recherche par EA Club ID avec nouvelle API ClubStats Pro
       console.log(`🆔 Recherche par ID: ${query}`);
       
       try {
-        const eafc = new EAFCApiService();
-        
-        // Utiliser les VRAIES plateformes supportées par l'API
+        // Utiliser les plateformes supportées
         const plateformes = [
-          { platform: 'common-gen5', name: 'PlayStation 5', userCode: 'ps5' },
-          { platform: 'common-gen4', name: 'PlayStation 4', userCode: 'ps4' },
-          { platform: 'nx', name: 'Nintendo Switch', userCode: 'switch' }
+          { platform: 'ps5', name: 'PlayStation 5' },
+          { platform: 'ps4', name: 'PlayStation 4' },
+          { platform: 'pc', name: 'PC' }
         ];
         
         for (const plat of plateformes) {
           try {
             console.log(`  🎮 Test ${plat.name} (${plat.platform})...`);
             
-            // Utiliser la vraie API avec le bon format
-            const clubInfo = await eafc.clubInfo({
-              clubIds: query.trim(),  // String, pas array
-              platform: plat.platform
-            });
+            // Utiliser notre nouvelle API ClubStats Pro
+            const clubInfo = await fetchClubInfo(query.trim(), plat.platform);
             
             console.log(`  📊 Résultat API pour ${plat.name}:`, clubInfo);
             
-            // 🔧 CORRECTION : Gérer le format RÉEL de l'API EA Sports
-            if (clubInfo && typeof clubInfo === 'object') {
+            if (clubInfo && clubInfo.name && clubInfo.name.trim().length > 0 && clubInfo.name !== `Club ${query}`) {
+              console.log(`✅ Club trouvé sur ${plat.name}: "${clubInfo.name}" (ID: ${clubInfo.id})`);
               
-              let clubName = '';
-              let clubId = query.trim();
-              let detectedClubInfo = null;
-              let extractionMethod = '';
-              
-              // 🎯 NOUVEAU : Format { "24000": { name: "BUUR MFC", clubId: 24000 } }
-              if (clubInfo[query.trim()]) {
-                // Format spécifique EA Sports : objet avec ID comme clé
-                detectedClubInfo = clubInfo[query.trim()];
-                clubName = detectedClubInfo.name || detectedClubInfo.clubName || '';
-                clubId = detectedClubInfo.clubId || query.trim();
-                extractionMethod = `EA Sports format key "${query.trim()}"`;
-                console.log(`  🎯 Format EA Sports détecté: ID ${query} → "${clubName}"`);
-              } else if (Array.isArray(clubInfo) && clubInfo.length > 0) {
-                // Format array
-                detectedClubInfo = clubInfo[0];
-                clubName = detectedClubInfo.name || detectedClubInfo.clubName || '';
-                clubId = detectedClubInfo.clubId || query.trim();
-                extractionMethod = 'Array format';
-                console.log(`  🎯 Format Array détecté: "${clubName}"`);
-              } else if (clubInfo.name || clubInfo.clubName) {
-                // Format objet direct
-                detectedClubInfo = clubInfo;
-                clubName = clubInfo.name || clubInfo.clubName || '';
-                clubId = clubInfo.clubId || query.trim();
-                extractionMethod = 'Direct object';
-                console.log(`  🎯 Format Objet direct détecté: "${clubName}"`);
-              } else {
-                // Chercher dans toutes les propriétés pour un nom
-                const keys = Object.keys(clubInfo);
-                console.log(`  🔍 Recherche dans les clés: [${keys.join(', ')}]`);
-                
-                for (const key of keys) {
-                  if (clubInfo[key] && typeof clubInfo[key] === 'object') {
-                    const candidate = clubInfo[key];
-                    if (candidate.name || candidate.clubName) {
-                      detectedClubInfo = candidate;
-                      clubName = candidate.name || candidate.clubName || '';
-                      clubId = candidate.clubId || key;
-                      extractionMethod = `Key search found "${key}"`;
-                      console.log(`  🎯 Format clé "${key}" détecté: "${clubName}"`);
-                      break;
-                    }
-                  }
+              return NextResponse.json({
+                success: true,
+                message: `Club trouvé: "${clubInfo.name}" sur ${plat.name}`,
+                data: {
+                  name: clubInfo.name.trim(),
+                  eaClubId: clubInfo.id.toString(),
+                  platform: plat.platform,
+                  found: true,
+                  source: 'ea_sports_api_clubstats_pro',
+                  detectedPlatform: plat.name,
+                  debugInfo: `Found using ClubStats Pro API`
                 }
-              }
-              
-              // Vérifier si on a trouvé un nom valide
-              if (clubName && clubName.trim().length > 0 && clubName !== `Club ${query}`) {
-                console.log(`✅ Club trouvé sur ${plat.name}: "${clubName}" (ID: ${clubId})`);
-                
-                return NextResponse.json({
-                  success: true,
-                  message: `Club trouvé: "${clubName}" sur ${plat.name}`,
-                  data: {
-                    name: clubName.trim(),
-                    eaClubId: clubId.toString(),
-                    platform: plat.userCode,
-                    found: true,
-                    source: 'ea_sports_api',
-                    detectedPlatform: plat.name,
-                    apiPlatform: plat.platform,
-                    rawData: detectedClubInfo,
-                    extractionMethod: extractionMethod,
-                    debugInfo: `Found using ${extractionMethod}`
-                  }
-                });
-              } else {
-                console.log(`  ❌ Nom de club invalide ou vide: "${clubName}"`);
-              }
+              });
             } else {
-              console.log(`  ❌ Réponse API invalide ou vide`);
+              console.log(`  ❌ Club non trouvé ou nom invalide sur ${plat.name}`);
             }
             
-          } catch (platError) {
+          } catch (platError: any) {
             console.log(`  ❌ Erreur ${plat.name}:`, platError.message);
             
-            if (platError.message.includes('fetch failed')) {
+            if (platError.message?.includes('fetch failed')) {
               console.log(`    🌐 Serveurs EA Sports inaccessibles pour ${plat.name}`);
-            } else if (platError.message.includes('not found')) {
+            } else if (platError.message?.includes('not found')) {
               console.log(`    🔍 Club ${query} non trouvé sur ${plat.name}`);
-            } else if (platError.message.includes('validation')) {
-              console.log(`    📝 Erreur de validation pour ${plat.name}: ${platError.message}`);
-            } else if (platError.message.includes('Unexpected token')) {
-              console.log(`    🔧 Erreur de format JSON pour ${plat.name} (serveur EA unstable)`);
+            } else {
+              console.log(`    🔧 Erreur générique pour ${plat.name}: ${platError.message}`);
             }
             
             continue; // Essayer la plateforme suivante
           }
         }
         
-        // Si non trouvé sur toutes les plateformes mais API accessible
-        console.log(`❌ Club ID ${query} introuvable sur toutes les plateformes (PS5, PS4, Switch)`);
+        // Si non trouvé sur toutes les plateformes
+        console.log(`❌ Club ID ${query} introuvable sur toutes les plateformes (PS5, PS4, PC)`);
         
         return NextResponse.json({
           success: false,
@@ -148,13 +86,13 @@ export async function POST(request: NextRequest) {
             allowManual: true,
             proposedName: `Club ${query.trim()}`,
             apiAccessible: true,
-            testedPlatforms: ['PlayStation 5', 'PlayStation 4', 'Nintendo Switch'],
-            debugInfo: 'API accessible but no club found on any platform'
+            testedPlatforms: ['PlayStation 5', 'PlayStation 4', 'PC'],
+            debugInfo: 'ClubStats Pro API accessible but no club found on any platform'
           }
         });
         
-      } catch (apiError) {
-        console.error(`❌ Erreur API EA Sports générale:`, apiError);
+      } catch (apiError: any) {
+        console.error(`❌ Erreur API ClubStats Pro générale:`, apiError);
         
         // Mode dégradé - API inaccessible
         return NextResponse.json({
@@ -169,7 +107,7 @@ export async function POST(request: NextRequest) {
             proposedName: `Club EA ${query.trim()}`,
             apiError: true,
             errorMessage: apiError.message,
-            errorType: apiError.message.includes('fetch failed') ? 'network' : 'api'
+            errorType: apiError.message?.includes('fetch failed') ? 'network' : 'api'
           }
         });
       }
@@ -191,7 +129,7 @@ export async function POST(request: NextRequest) {
       data: { found: false, query: query, type: type }
     });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ Erreur générale API recherche:', error);
     
     return NextResponse.json(

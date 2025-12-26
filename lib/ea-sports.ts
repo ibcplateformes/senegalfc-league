@@ -17,6 +17,7 @@ export interface ClubInfoData {
   id: string;
   name: string;
   platform: string;
+  members?: any[]; // Membres optionnels du club EA Sports
 }
 
 export interface EAPlayerStatsData {

@@ -97,7 +97,10 @@ export async function GET(
     
     // Ajouter les infos EA Sports si disponibles
     let eaPlayersInfo = null;
-    if (eaClubInfo?.members) {
+    // Note: La récupération des membres EA Sports n'est pas encore implémentée
+    // Dans une version future, on pourrait récupérer la liste des membres actifs du club
+    
+    if (eaClubInfo && eaClubInfo.members && Array.isArray(eaClubInfo.members)) {
       eaPlayersInfo = eaClubInfo.members.map((member: any) => ({
         name: member.name,
         position: member.favoritePosition || 'ATT',
@@ -107,6 +110,8 @@ export async function GET(
       }));
       
       console.log(`🎮 ${eaPlayersInfo.length} membres EA Sports trouvés`);
+    } else {
+      console.log('ℹ️ Infos membres EA Sports non disponibles pour ce club');
     }
     
     return NextResponse.json({

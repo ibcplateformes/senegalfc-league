@@ -7,6 +7,7 @@ export default function DebugSyncPage() {
   const [testResult, setTestResult] = useState<any>(null);
   const [eaApiResult, setEaApiResult] = useState<any>(null);
   const [exploreResult, setExploreResult] = useState<any>(null);
+  const [realLibResult, setRealLibResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [matchId, setMatchId] = useState('');
   const [clubId, setClubId] = useState('40142'); // HOF 221 par défaut
@@ -100,6 +101,20 @@ export default function DebugSyncPage() {
     }
   };
 
+  const testRealLib = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/admin/debug/test-real-lib');
+      const result = await response.json();
+      setRealLibResult(result);
+    } catch (error) {
+      console.error('Erreur test vraie librairie:', error);
+      setRealLibResult({ success: false, error: 'Erreur réseau' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
       <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '2rem' }}>
@@ -156,6 +171,117 @@ export default function DebugSyncPage() {
                     <br />
                     &nbsp;&nbsp;EA Match ID: <code>{match.eaMatchId || 'MANQUANT ❌'}</code>
                   </div>
+      
+      {/* Test Vraie Librairie EA Sports */}
+      <div style={{ 
+        backgroundColor: 'white', 
+        padding: '1.5rem', 
+        borderRadius: '0.5rem', 
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+        marginBottom: '2rem'
+      }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem' }}>
+          🔥 Test Vraie Librairie EA Sports (eafc-clubs-api)
+        </h2>
+        
+        <p style={{ marginBottom: '1rem', color: '#6b7280' }}>
+          Test direct de la librairie eafc-clubs-api utilisée par ClubStats Pro.
+        </p>
+        
+        <button
+          onClick={testRealLib}
+          disabled={loading}
+          style={{
+            backgroundColor: loading ? '#9ca3af' : '#10b981',
+            color: 'white',
+            padding: '0.75rem 1.5rem',
+            borderRadius: '0.375rem',
+            border: 'none',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            marginBottom: '1rem'
+          }}
+        >
+          {loading ? 'Test en cours...' : '🔥 Tester la vraie librairie EA Sports'}
+        </button>
+        
+        {realLibResult && (
+          <div style={{ 
+            backgroundColor: realLibResult.success ? '#dcfce7' : '#fef2f2', 
+            border: `1px solid ${realLibResult.success ? '#16a34a' : '#ef4444'}`,
+            padding: '1rem', 
+            borderRadius: '0.375rem',
+            fontFamily: 'monospace',
+            fontSize: '0.875rem'
+          }}>
+            <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>
+              {realLibResult.success ? '✅ VRAIE LIBRAIRIE FONCTIONNE !' : '❌ ÉCHEC VRAIE LIBRAIRIE'}
+            </div>
+            
+            {realLibResult.success ? (
+              <div>
+                <div><strong>Message:</strong> {realLibResult.message}</div>
+                {realLibResult.data && (
+                  <div style={{ marginTop: '1rem' }}>
+                    <div><strong>🎮 Club testé:</strong> {realLibResult.data.clubId}</div>
+                    <div><strong>🎮 Plateforme:</strong> {realLibResult.data.platform}</div>
+                    
+                    {realLibResult.data.summary && (
+                      <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#f0fdf4', borderRadius: '0.25rem' }}>
+                        <strong>📈 Résumé:</strong> {realLibResult.data.summary.successful}/{realLibResult.data.summary.total} tests réussis
+                      </div>
+                    )}
+                    
+                    <div style={{ marginTop: '0.5rem' }}>
+                      <strong>📈 Résultats des tests:</strong>
+                      <div style={{ marginLeft: '1rem', marginTop: '0.5rem' }}>
+                        {realLibResult.data.tests?.map((test: any, index: number) => (
+                          <div key={index} style={{ marginBottom: '0.5rem', padding: '0.5rem', backgroundColor: '#f9fafb', borderRadius: '0.25rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                              <span>{test.success ? '✅' : '❌'}</span>
+                              <strong>{test.name}</strong>
+                            </div>
+                            {test.success && test.data && (
+                              <div style={{ fontSize: '0.75rem', color: '#10b981', marginTop: '0.25rem' }}>
+                                {test.name === 'Club Info' && test.data.name && (
+                                  <div>• Club: {test.data.name}</div>
+                                )}
+                                {test.name === 'Member Stats' && test.data.memberCount && (
+                                  <div>• {test.data.memberCount} membres avec stats</div>
+                                )}
+                                {test.name === 'Matches' && test.data.matchCount && (
+                                  <div>• {test.data.matchCount} matchs récupérés</div>
+                                )}
+                              </div>
+                            )}
+                            {test.error && (
+                              <div style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '0.25rem' }}>
+                                Erreur: {test.error}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {realLibResult.success && (
+                  <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#fef3c7', borderRadius: '0.25rem', border: '1px solid #f59e0b' }}>
+                    <strong>🎉 EXCELLENTE NOUVELLE !</strong>
+                    <div style={{ marginTop: '0.25rem', fontSize: '0.875rem' }}>
+                      La vraie librairie fonctionne ! Vos stats de joueurs peuvent maintenant être synchronisées.
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div>
+                <div><strong>Erreur:</strong> {realLibResult.error}</div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
                 ))}
               </div>
             )}
@@ -569,23 +695,24 @@ export default function DebugSyncPage() {
       }}>
         <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>💡 Actions recommandées:</div>
         <ol style={{ marginLeft: '1rem' }}>
-          <li>Lancez d'abord le <strong>diagnostic général</strong> pour voir l'état de la base</li>
+          <li><strong>🔥 🆕 NOUVEAU - Testez d'abord la vraie librairie EA Sports</strong> (bouton vert ci-dessus)</li>
+          <li>Lancez le <strong>diagnostic général</strong> pour voir l'état de la base</li>
           <li><strong>🎮 Testez l'API EA Sports</strong> avec le Club ID 40142 pour voir quels endpoints actuels marchent</li>
-          <li><strong>🔍 🆕 Explorez les nouveaux endpoints FC25</strong> - Ceci va tester 12 endpoints différents pour trouver les nouveaux</li>
           <li>Si des endpoints fonctionnels sont trouvés, nous corrigerons le code pour les utiliser</li>
           <li>Une fois l'API fixée, testez la synchronisation d'un match spécifique</li>
         </ol>
         
-        <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#fee2e2', borderRadius: '0.25rem', border: '1px solid #fecaca' }}>
-          <strong>🎯 Problème principal identifié:</strong>
-          <br />1. EA Match IDs manquants dans les matchs validés
-          <br />2. Endpoints EA Sports obsolètes (seul 1/5 fonctionne)
-          <br />3. L'exploration FC25 va nous dire quels nouveaux endpoints utiliser
+        <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#dcfce7', borderRadius: '0.25rem', border: '1px solid #16a34a' }}>
+          <strong>🎆 NOUVELLE SOLUTION IMPLÉMENTÉE :</strong>
+          <br />Nous avons implémenté la vraie librairie <code>eafc-clubs-api</code> utilisée par ClubStats Pro.
+          <br />Cette librairie devrait résoudre tous les problèmes de synchronisation des stats !
         </div>
         
-        <div style={{ marginTop: '0.75rem', padding: '0.75rem', backgroundColor: '#dcfce7', borderRadius: '0.25rem', border: '1px solid #16a34a' }}>
-          <strong>✅ Solution identifiée:</strong>
-          <br />L'exploration des nouveaux endpoints FC25 va révéler les vraies APIs à utiliser pour récupérer les matchs et stats de joueurs.
+        <div style={{ marginTop: '0.75rem', padding: '0.75rem', backgroundColor: '#fee2e2', borderRadius: '0.25rem', border: '1px solid #fecaca' }}>
+          <strong>🎯 Problème identifié:</strong>
+          <br />1. EA Match IDs manquants dans les matchs validés
+          <br />2. Endpoints EA Sports obsolètes (seul 1/5 fonctionne)
+          <br />3. Solution: Vraie librairie eafc-clubs-api comme ClubStats Pro
         </div>
       </div>
     </div>

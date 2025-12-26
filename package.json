@@ -19,6 +19,7 @@
     "@types/react-dom": "^18.3.0",
     "bcryptjs": "^2.4.3",
     "dotenv": "^17.2.3",
+    "eafc-clubs-api": "^1.2.0",
     "lucide-react": "^0.545.0",
     "next": "^14.2.0",
     "node-cron": "^4.2.1",

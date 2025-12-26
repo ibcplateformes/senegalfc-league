@@ -150,29 +150,102 @@ export async function fetchClubMatchDetails(matchId: string, platform: string): 
 }
 
 /**
- * Récupère les informations d'un club EA Sports
+ * Récupère les informations COMPLETES d'un club EA Sports avec ses membres
  */
 export async function fetchClubInfo(clubId: string, platform: string): Promise<ClubInfoData | null> {
-  console.log(`🔍 Récupération infos club EA: ${clubId} (${platform})`);
+  console.log(`🔍 Récupération infos COMPLETES club EA: ${clubId} (${platform})`);
   
-  // Noms réels des clubs sénégalais
-  const clubNames: { [key: string]: string } = {
-    '40142': 'HOF 221',
-    '24000': 'BUUR MFC', 
-    '29739': 'NEK BI',
-    '460504': 'FC BOUNDOUXATAL',
-    '46871': 'HEMLE FC',
-    '1039553': 'ASC GALGUI'
-  };
-  
-  const name = clubNames[clubId] || `Club ${clubId}`;
-  console.log(`✅ Club trouvé: "${name}"`);
-  
-  return {
-    id: clubId,
-    name: name,
-    platform: platform
-  };
+  try {
+    // Mapping des plateformes
+    const PLATFORM_MAP = {
+      'ps5': 'common-gen5',
+      'ps4': 'common-gen4', 
+      'xboxseriesxs': 'common-gen5',
+      'xboxone': 'common-gen4',
+      'pc': 'common-gen5',
+    };
+
+    const apiPlatform = PLATFORM_MAP[platform as keyof typeof PLATFORM_MAP] || 'common-gen5';
+    
+    // 🆕 ENDPOINT RÉEL pour les informations du club
+    const url = `https://proclubs.ea.com/api/fc/clubs/info?clubIds=${clubId}&platform=${apiPlatform}`;
+    console.log(`🔗 Appel API EA (Club Info): ${url}`);
+    
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/json',
+        'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Referer': 'https://www.ea.com/',
+        'Origin': 'https://www.ea.com'
+      }
+    });
+    
+    if (!response.ok) {
+      console.log(`⚠️  API EA Sports club info: ${response.status}`);
+      // Fallback sur les noms hardcodés
+      const clubNames: { [key: string]: string } = {
+        '40142': 'HOF 221',
+        '24000': 'BUUR MFC', 
+        '29739': 'NEK BI',
+        '460504': 'FC BOUNDOUXATAL',
+        '46871': 'HEMLE FC',
+        '1039553': 'ASC GALGUI'
+      };
+      
+      const name = clubNames[clubId] || `Club ${clubId}`;
+      return { id: clubId, name: name, platform: platform };
+    }
+    
+    const clubsData = await response.json();
+    console.log(`✅ Réponse API EA Sports club info reçue`);
+    
+    // L'API retourne un objet avec les clubs indexés par ID
+    const clubInfo = clubsData[clubId];
+    if (!clubInfo) {
+      console.log(`❌ Club ${clubId} non trouvé dans la réponse API`);
+      return null;
+    }
+    
+    console.log(`✅ Club trouvé: "${clubInfo.name}"`);
+    
+    // Récupérer les membres du club si disponibles
+    let members = [];
+    if (clubInfo.members && Array.isArray(clubInfo.members)) {
+      members = clubInfo.members.map((member: any) => ({
+        name: member.name,
+        position: member.favoritePosition || 'ATT',
+        overall: member.overallRating || 0,
+        isActive: member.isActive !== false,
+        joinDate: member.joinDate,
+        playerId: member.playerId
+      }));
+      console.log(`👥 ${members.length} membres trouvés pour le club`);
+    }
+    
+    return {
+      id: clubId,
+      name: clubInfo.name || `Club ${clubId}`,
+      platform: platform,
+      members: members
+    };
+    
+  } catch (error: any) {
+    console.error(`❌ Erreur récupération infos club ${clubId}:`, error);
+    
+    // Fallback sur les noms hardcodés
+    const clubNames: { [key: string]: string } = {
+      '40142': 'HOF 221',
+      '24000': 'BUUR MFC', 
+      '29739': 'NEK BI',
+      '460504': 'FC BOUNDOUXATAL',
+      '46871': 'HEMLE FC',
+      '1039553': 'ASC GALGUI'
+    };
+    
+    const name = clubNames[clubId] || `Club ${clubId}`;
+    return { id: clubId, name: name, platform: platform };
+  }
 }
 
 /**

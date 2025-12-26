@@ -44,6 +44,29 @@ export async function PUT(
       // Recalculer les stats des clubs impliqués
       await recalculateAllStats();
       
+      // 🆕 Synchroniser automatiquement les stats des joueurs
+      try {
+        console.log(`🔄 Synchronisation automatique des stats joueurs pour le match ${matchId}...`);
+        
+        // Appeler l'API de synchronisation des joueurs
+        const syncResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/admin/matches/${matchId}/sync-players`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (syncResponse.ok) {
+          const syncData = await syncResponse.json();
+          console.log(`✅ Stats joueurs synchronisées: ${syncData.data?.playersCreated || 0} créés, ${syncData.data?.playersUpdated || 0} mis à jour`);
+        } else {
+          console.error(`❌ Erreur synchronisation stats joueurs: ${syncResponse.status}`);
+        }
+      } catch (syncError) {
+        console.error('❌ Erreur lors de la synchronisation des stats joueurs:', syncError);
+        // Ne pas bloquer la validation si la sync des joueurs échoue
+      }
+      
       console.log(`✅ Match ${matchId} validé`);
     }
     

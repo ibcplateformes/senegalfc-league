@@ -223,6 +223,12 @@ export default function ClubsManagement() {
                     <td className="px-6 py-4">
                       <div className="flex space-x-2">
                         <Link
+                          href={`/admin/clubs/${club.id}/players`}
+                          className="text-green-600 hover:text-green-700 text-sm font-medium"
+                        >
+                          👥 Joueurs
+                        </Link>
+                        <Link
                           href={`/admin/clubs/${club.id}/edit`}
                           className="text-blue-600 hover:text-blue-700 text-sm font-medium"
                         >

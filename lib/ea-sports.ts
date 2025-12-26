@@ -94,6 +94,61 @@ export interface EAClubCompleteData {
 }
 
 /**
+ * Récupère les détails complets d'un match spécifique avec les stats des joueurs
+ */
+export async function fetchClubMatchDetails(matchId: string, platform: string): Promise<any> {
+  console.log(`🔍 Récupération détails match: ${matchId} (${platform})`);
+  
+  try {
+    // Mapping des plateformes
+    const PLATFORM_MAP = {
+      'ps5': 'common-gen5',
+      'ps4': 'common-gen4', 
+      'xboxseriesxs': 'common-gen5',
+      'xboxone': 'common-gen4',
+      'pc': 'common-gen5',
+    };
+
+    const apiPlatform = PLATFORM_MAP[platform as keyof typeof PLATFORM_MAP] || 'common-gen5';
+    
+    // Appeler l'API EA Sports pour les détails du match
+    const url = `https://proclubs.ea.com/api/fc/clubs/matches/${matchId}/details?platform=${apiPlatform}`;
+    console.log(`🔗 Appel API EA: ${url}`);
+    
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/json',
+        'Accept-Language': 'fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Referer': 'https://www.ea.com/',
+        'Origin': 'https://www.ea.com'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API EA Sports error: ${response.status}`);
+    }
+    
+    const matchDetails = await response.json();
+    console.log(`✅ Détails du match récupérés pour ${matchId}`);
+    
+    // Vérifier que les données des joueurs sont présentes
+    if (matchDetails.players) {
+      const totalPlayers = Object.keys(matchDetails.players).reduce((sum, clubId) => {
+        return sum + Object.keys(matchDetails.players[clubId] || {}).length;
+      }, 0);
+      console.log(`👥 ${totalPlayers} joueurs trouvés dans les détails du match`);
+    }
+    
+    return matchDetails;
+    
+  } catch (error: any) {
+    console.error(`❌ Erreur récupération détails match ${matchId}:`, error);
+    throw error;
+  }
+}
+
+/**
  * Récupère les informations d'un club EA Sports
  */
 export async function fetchClubInfo(clubId: string, platform: string): Promise<ClubInfoData | null> {

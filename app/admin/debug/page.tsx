@@ -6,6 +6,7 @@ export default function DebugSyncPage() {
   const [diagnostic, setDiagnostic] = useState<any>(null);
   const [testResult, setTestResult] = useState<any>(null);
   const [eaApiResult, setEaApiResult] = useState<any>(null);
+  const [exploreResult, setExploreResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [matchId, setMatchId] = useState('');
   const [clubId, setClubId] = useState('40142'); // HOF 221 par défaut
@@ -73,6 +74,32 @@ export default function DebugSyncPage() {
     }
   };
 
+  const exploreFC25 = async () => {
+    if (!clubId.trim()) {
+      alert('Veuillez entrer un Club ID');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const response = await fetch('/api/admin/debug/explore-fc25', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          clubId: clubId.trim(),
+          platform: platform
+        })
+      });
+      const result = await response.json();
+      setExploreResult(result);
+    } catch (error) {
+      console.error('Erreur exploration FC25:', error);
+      setExploreResult({ success: false, error: 'Erreur réseau' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
       <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '2rem' }}>
@@ -135,6 +162,135 @@ export default function DebugSyncPage() {
           </div>
         )}
       </div>
+      
+      {/* Exploration FC25 Results */}
+      {exploreResult && (
+        <div style={{ 
+          backgroundColor: 'white', 
+          padding: '1.5rem', 
+          borderRadius: '0.5rem', 
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          marginBottom: '2rem'
+        }}>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem' }}>
+            🔍 Exploration Endpoints EA FC 25
+          </h2>
+          
+          <div style={{ 
+            backgroundColor: exploreResult.success ? '#f0f9ff' : '#fef2f2', 
+            border: `1px solid ${exploreResult.success ? '#3b82f6' : '#ef4444'}`,
+            padding: '1rem', 
+            borderRadius: '0.375rem',
+            fontFamily: 'monospace',
+            fontSize: '0.875rem'
+          }}>
+            <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>
+              {exploreResult.success ? '✅ EXPLORATION FC25 RÉUSSIE' : '❌ ÉCHEC EXPLORATION FC25'}
+            </div>
+            
+            {exploreResult.success ? (
+              <div>
+                <div><strong>Message:</strong> {exploreResult.message}</div>
+                {exploreResult.data && (
+                  <div style={{ marginTop: '1rem' }}>
+                    <div><strong>🎮 Club exploré:</strong> {exploreResult.data.clubId}</div>
+                    <div><strong>🎮 Plateforme:</strong> {exploreResult.data.platform}</div>
+                    
+                    {exploreResult.data.summary && (
+                      <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#f0f9ff', borderRadius: '0.25rem' }}>
+                        <strong>📈 Résumé:</strong> {exploreResult.data.summary.successful}/{exploreResult.data.summary.total} endpoints fonctionnels
+                        <br />
+                        <strong>⚽ Endpoints matchs potentiels:</strong> {exploreResult.data.summary.potentialMatches}
+                        <br />
+                        <strong>👥 Endpoints joueurs potentiels:</strong> {exploreResult.data.summary.potentialPlayers}
+                      </div>
+                    )}
+                    
+                    <div style={{ marginTop: '0.5rem' }}>
+                      <strong>📈 Résultats détaillés:</strong>
+                      <div style={{ marginLeft: '1rem', marginTop: '0.5rem', maxHeight: '400px', overflowY: 'auto' }}>
+                        {exploreResult.data.tests?.map((test: any, index: number) => (
+                          <div key={index} style={{ marginBottom: '0.75rem', padding: '0.75rem', backgroundColor: '#f9fafb', borderRadius: '0.25rem', border: `1px solid ${test.success ? '#d1fae5' : '#fecaca'}` }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                              <span>{test.success ? '✅' : '❌'}</span>
+                              <strong style={{ color: test.success ? '#10b981' : '#ef4444' }}>{test.name}</strong>
+                              <span style={{ color: '#6b7280' }}>({test.status})</span>
+                            </div>
+                            
+                            {test.success && test.hasData && (
+                              <div>
+                                <div style={{ fontSize: '0.75rem', color: '#10b981', marginBottom: '0.25rem' }}>
+                                  • Type: {test.isArray ? `Array[${test.arrayLength}]` : 'Object'}
+                                  <br />
+                                  • Clés: {test.dataKeys.slice(0, 8).join(', ')}{test.dataKeys.length > 8 ? '...' : ''}
+                                </div>
+                                
+                                {test.sample && (
+                                  <details style={{ marginTop: '0.25rem' }}>
+                                    <summary style={{ cursor: 'pointer', fontSize: '0.75rem', color: '#6b7280' }}>Voir l'aperçu des données</summary>
+                                    <div style={{ fontSize: '0.6rem', color: '#6b7280', marginTop: '0.25rem', padding: '0.5rem', backgroundColor: 'white', borderRadius: '0.25rem', maxHeight: '100px', overflowY: 'auto', fontFamily: 'monospace' }}>
+                                      {test.sample}
+                                    </div>
+                                  </details>
+                                )}
+                              </div>
+                            )}
+                            
+                            <div style={{ fontSize: '0.6rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                              URL: {test.url}
+                            </div>
+                            
+                            {test.error && (
+                              <div style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '0.25rem' }}>
+                                Erreur: {test.error}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {exploreResult.data.recommendations && (
+                      <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#fef3c7', borderRadius: '0.25rem', border: '1px solid #f59e0b' }}>
+                        <strong>📝 Recommandations:</strong>
+                        <div style={{ marginTop: '0.25rem', fontSize: '0.875rem' }}>
+                          {exploreResult.data.recommendations.nextSteps}
+                        </div>
+                        
+                        {exploreResult.data.recommendations.bestMatchEndpoints?.length > 0 && (
+                          <div style={{ marginTop: '0.5rem' }}>
+                            <strong>Meilleurs endpoints pour les matchs:</strong>
+                            <ul style={{ marginLeft: '1rem', marginTop: '0.25rem' }}>
+                              {exploreResult.data.recommendations.bestMatchEndpoints.map((endpoint: any, index: number) => (
+                                <li key={index} style={{ fontSize: '0.75rem' }}>{endpoint.name}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                        
+                        {exploreResult.data.recommendations.bestPlayerEndpoints?.length > 0 && (
+                          <div style={{ marginTop: '0.5rem' }}>
+                            <strong>Meilleurs endpoints pour les joueurs:</strong>
+                            <ul style={{ marginLeft: '1rem', marginTop: '0.25rem' }}>
+                              {exploreResult.data.recommendations.bestPlayerEndpoints.map((endpoint: any, index: number) => (
+                                <li key={index} style={{ fontSize: '0.75rem' }}>{endpoint.name}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div>
+                <div><strong>Erreur:</strong> {exploreResult.error}</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Test API EA Sports */}
       <div style={{ 
@@ -202,10 +358,27 @@ export default function DebugSyncPage() {
             borderRadius: '0.375rem',
             border: 'none',
             cursor: loading || !clubId.trim() ? 'not-allowed' : 'pointer',
+            marginBottom: '1rem',
+            marginRight: '1rem'
+          }}
+        >
+          {loading ? 'Test en cours...' : '🎮 Tester endpoints actuels'}
+        </button>
+        
+        <button
+          onClick={exploreFC25}
+          disabled={loading || !clubId.trim()}
+          style={{
+            backgroundColor: loading || !clubId.trim() ? '#9ca3af' : '#dc2626',
+            color: 'white',
+            padding: '0.75rem 1.5rem',
+            borderRadius: '0.375rem',
+            border: 'none',
+            cursor: loading || !clubId.trim() ? 'not-allowed' : 'pointer',
             marginBottom: '1rem'
           }}
         >
-          {loading ? 'Test en cours...' : '🎮 Tester les endpoints EA Sports'}
+          {loading ? 'Exploration...' : '🔍 Explorer nouveaux endpoints FC25'}
         </button>
 
         {eaApiResult && (
@@ -397,15 +570,22 @@ export default function DebugSyncPage() {
         <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>💡 Actions recommandées:</div>
         <ol style={{ marginLeft: '1rem' }}>
           <li>Lancez d'abord le <strong>diagnostic général</strong> pour voir l'état de la base</li>
-          <li><strong>🆕 Testez l'API EA Sports</strong> avec le Club ID 40142 (HOF 221) pour voir si les endpoints fonctionnent</li>
-          <li>Si l'API EA Sports ne fonctionne pas, c'est là le problème principal</li>
-          <li>Si l'API fonctionne, copiez l'ID d'un match validé et testez la synchronisation</li>
-          <li>Si aucun EA Match ID n'est trouvé, le problème vient de la détection des matchs</li>
+          <li><strong>🎮 Testez l'API EA Sports</strong> avec le Club ID 40142 pour voir quels endpoints actuels marchent</li>
+          <li><strong>🔍 🆕 Explorez les nouveaux endpoints FC25</strong> - Ceci va tester 12 endpoints différents pour trouver les nouveaux</li>
+          <li>Si des endpoints fonctionnels sont trouvés, nous corrigerons le code pour les utiliser</li>
+          <li>Une fois l'API fixée, testez la synchronisation d'un match spécifique</li>
         </ol>
         
         <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#fee2e2', borderRadius: '0.25rem', border: '1px solid #fecaca' }}>
-          <strong>🎯 Problème probable:</strong> Les endpoints EA Sports que nous utilisons ne fonctionnent plus ou ont changé.
-          Le test API EA Sports va nous dire quels endpoints marchent réellement.
+          <strong>🎯 Problème principal identifié:</strong>
+          <br />1. EA Match IDs manquants dans les matchs validés
+          <br />2. Endpoints EA Sports obsolètes (seul 1/5 fonctionne)
+          <br />3. L'exploration FC25 va nous dire quels nouveaux endpoints utiliser
+        </div>
+        
+        <div style={{ marginTop: '0.75rem', padding: '0.75rem', backgroundColor: '#dcfce7', borderRadius: '0.25rem', border: '1px solid #16a34a' }}>
+          <strong>✅ Solution identifiée:</strong>
+          <br />L'exploration des nouveaux endpoints FC25 va révéler les vraies APIs à utiliser pour récupérer les matchs et stats de joueurs.
         </div>
       </div>
     </div>

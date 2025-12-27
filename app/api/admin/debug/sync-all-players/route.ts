@@ -58,6 +58,19 @@ export async function POST() {
           continue;
         }
         
+        // Vérifier que le match a un EA Match ID (sécurité TypeScript)
+        if (!match.eaMatchId) {
+          console.log(`⚠️ Match sans EA Match ID, passage au suivant: ${match.homeClub.name} vs ${match.awayClub.name}`);
+          results.push({
+            matchId: match.id,
+            homeClub: match.homeClub.name,
+            awayClub: match.awayClub.name,
+            status: 'error',
+            error: 'EA Match ID manquant'
+          });
+          continue;
+        }
+        
         // Récupérer les détails du match depuis l'API EA Sports
         let matchDetails;
         try {

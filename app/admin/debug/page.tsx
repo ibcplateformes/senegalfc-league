@@ -205,6 +205,12 @@ export default function DebugSyncPage() {
                     <br />
                     &nbsp;&nbsp;EA Match ID: <code>{match.eaMatchId || 'MANQUANT'}</code>
                   </div>
+                ))}              
+              </div>
+            )}
+          </div>
+        )}
+      </div>
       
       {/* Script de Migration - Récupération EA Match IDs */}
       <div style={{ 
@@ -393,12 +399,6 @@ export default function DebugSyncPage() {
                     </div>
                   </div>
                 )}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-                ))}
               </div>
             )}
           </div>

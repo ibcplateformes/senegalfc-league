@@ -97,22 +97,12 @@ export async function GET(
     
     // Ajouter les infos EA Sports si disponibles
     let eaPlayersInfo = null;
-    // Note: La récupération des membres EA Sports n'est pas encore implémentée
-    // Dans une version future, on pourrait récupérer la liste des membres actifs du club
+    // Note: La récupération des membres EA Sports nécessiterait un appel API séparé
+    // L'objet eaClubInfo ne contient que les infos de base du club
     
-    if (eaClubInfo && eaClubInfo.members && Array.isArray(eaClubInfo.members)) {
-      eaPlayersInfo = eaClubInfo.members.map((member: any) => ({
-        name: member.name,
-        position: member.favoritePosition || 'ATT',
-        overall: member.overallRating || 0,
-        isActive: member.isActive || false,
-        joinDate: member.joinDate
-      }));
-      
-      console.log(`🎮 ${eaPlayersInfo.length} membres EA Sports trouvés`);
-    } else {
-      console.log('ℹ️ Infos membres EA Sports non disponibles pour ce club');
-    }
+    // Pour l'instant, nous n'avons que les infos de base du club depuis EA Sports
+    // Dans une version future, on pourrait utiliser un autre endpoint pour récupérer les membres
+    console.log('ℹ️ Récupération des membres EA Sports non implémentée pour ce endpoint');
     
     return NextResponse.json({
       success: true,

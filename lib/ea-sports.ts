@@ -323,3 +323,36 @@ export async function validateClub(clubId: string, platform: string): Promise<bo
   const clubInfo = await fetchClubInfo(clubId, platform);
   return clubInfo !== null;
 }
+
+export async function fetchClubMatchDetails(matchId: string, platform: string): Promise<any> {
+  console.log(`🔍 [EA-API] Récupération détails match: ${matchId} (${platform})`);
+  
+  try {
+    const api = getEAAPI();
+    const mappedPlatform = mapPlatform(platform);
+    
+    // Essayer de récupérer les détails du match
+    const response = await api.matchesStats({
+      matchId: matchId,
+      platform: mappedPlatform
+    });
+    
+    if (!response) {
+      throw new Error('Aucune donnée de match trouvée');
+    }
+    
+    console.log(`✅ [EA-API] Détails du match récupérés`);
+    
+    return {
+      matchId: matchId,
+      clubs: response.clubs || {},
+      players: response.players || {},
+      timestamp: response.timestamp,
+      details: response
+    };
+    
+  } catch (error: any) {
+    console.error(`❌ [EA-API] Erreur récupération match ${matchId}:`, error.message);
+    throw error;
+  }
+}

@@ -118,7 +118,7 @@ export default function DebugSyncPage() {
   return (
     <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
       <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '2rem' }}>
-        🧪 Debug Synchronisation Joueurs
+        Debug Synchronisation Joueurs
       </h1>
 
       {/* Diagnostic général */}
@@ -130,7 +130,7 @@ export default function DebugSyncPage() {
         marginBottom: '2rem'
       }}>
         <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-          📊 Diagnostic Général
+          Diagnostic Général
         </h2>
         <button
           onClick={runDiagnostic}
@@ -145,7 +145,7 @@ export default function DebugSyncPage() {
             marginBottom: '1rem'
           }}
         >
-          {loading ? 'Analyse...' : '🔍 Analyser la base de données'}
+          {loading ? 'Analyse...' : 'Analyser la base de données'}
         </button>
 
         {diagnostic && (
@@ -156,22 +156,22 @@ export default function DebugSyncPage() {
             fontFamily: 'monospace',
             fontSize: '0.875rem'
           }}>
-            <div><strong>✅ Matchs validés:</strong> {diagnostic.diagnostic?.validatedMatches || 0}</div>
-            <div><strong>👥 Joueurs en base:</strong> {diagnostic.diagnostic?.totalPlayers || 0}</div>
-            <div><strong>📈 Stats de match:</strong> {diagnostic.diagnostic?.matchStats || 0}</div>
+            <div><strong>Matchs validés:</strong> {diagnostic.diagnostic?.validatedMatches || 0}</div>
+            <div><strong>Joueurs en base:</strong> {diagnostic.diagnostic?.totalPlayers || 0}</div>
+            <div><strong>Stats de match:</strong> {diagnostic.diagnostic?.matchStats || 0}</div>
             
             {diagnostic.diagnostic?.matchDetails && diagnostic.diagnostic.matchDetails.length > 0 && (
               <div style={{ marginTop: '1rem' }}>
-                <strong>📋 Matchs validés:</strong>
+                <strong>Matchs validés:</strong>
                 {diagnostic.diagnostic.matchDetails.map((match: any, index: number) => (
                   <div key={index} style={{ marginLeft: '1rem', marginTop: '0.5rem' }}>
                     • {match.homeClub} {match.score} {match.awayClub}
                     <br />
                     &nbsp;&nbsp;ID: <code>{match.id}</code>
                     <br />
-                    &nbsp;&nbsp;EA Match ID: <code>{match.eaMatchId || 'MANQUANT ❌'}</code>
+                    &nbsp;&nbsp;EA Match ID: <code>{match.eaMatchId || 'MANQUANT'}</code>
                   </div>
-                ))}              
+                ))}
               </div>
             )}
           </div>
@@ -187,7 +187,7 @@ export default function DebugSyncPage() {
         marginBottom: '2rem'
       }}>
         <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-          🔥 Test Vraie Librairie EA Sports (eafc-clubs-api)
+          Test Vraie Librairie EA Sports (eafc-clubs-api)
         </h2>
         
         <p style={{ marginBottom: '1rem', color: '#6b7280' }}>
@@ -207,7 +207,7 @@ export default function DebugSyncPage() {
             marginBottom: '1rem'
           }}
         >
-          {loading ? 'Test en cours...' : '🔥 Tester la vraie librairie EA Sports'}
+          {loading ? 'Test en cours...' : 'Tester la vraie librairie EA Sports'}
         </button>
         
         {realLibResult && (
@@ -220,7 +220,7 @@ export default function DebugSyncPage() {
             fontSize: '0.875rem'
           }}>
             <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>
-              {realLibResult.success ? '✅ VRAIE LIBRAIRIE FONCTIONNE !' : '❌ ÉCHEC VRAIE LIBRAIRIE'}
+              {realLibResult.success ? 'VRAIE LIBRAIRIE FONCTIONNE !' : 'ÉCHEC VRAIE LIBRAIRIE'}
             </div>
             
             {realLibResult.success ? (
@@ -228,17 +228,17 @@ export default function DebugSyncPage() {
                 <div><strong>Message:</strong> {realLibResult.message}</div>
                 {realLibResult.data && (
                   <div style={{ marginTop: '1rem' }}>
-                    <div><strong>🎮 Club testé:</strong> {realLibResult.data.clubId}</div>
-                    <div><strong>🎮 Plateforme:</strong> {realLibResult.data.platform}</div>
+                    <div><strong>Club testé:</strong> {realLibResult.data.clubId}</div>
+                    <div><strong>Plateforme:</strong> {realLibResult.data.platform}</div>
                     
                     {realLibResult.data.summary && (
                       <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#f0fdf4', borderRadius: '0.25rem' }}>
-                        <strong>📈 Résumé:</strong> {realLibResult.data.summary.successful}/{realLibResult.data.summary.total} tests réussis
+                        <strong>Résumé:</strong> {realLibResult.data.summary.successful}/{realLibResult.data.summary.total} tests réussis
                       </div>
                     )}
                     
                     <div style={{ marginTop: '0.5rem' }}>
-                      <strong>📈 Résultats des tests:</strong>
+                      <strong>Résultats des tests:</strong>
                       <div style={{ marginLeft: '1rem', marginTop: '0.5rem' }}>
                         {realLibResult.data.tests?.map((test: any, index: number) => (
                           <div key={index} style={{ marginBottom: '0.5rem', padding: '0.5rem', backgroundColor: '#f9fafb', borderRadius: '0.25rem' }}>
@@ -273,7 +273,7 @@ export default function DebugSyncPage() {
                 
                 {realLibResult.success && (
                   <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#fef3c7', borderRadius: '0.25rem', border: '1px solid #f59e0b' }}>
-                    <strong>🎉 EXCELLENTE NOUVELLE !</strong>
+                    <strong>EXCELLENTE NOUVELLE !</strong>
                     <div style={{ marginTop: '0.25rem', fontSize: '0.875rem' }}>
                       La vraie librairie fonctionne ! Vos stats de joueurs peuvent maintenant être synchronisées.
                     </div>
@@ -288,141 +288,6 @@ export default function DebugSyncPage() {
           </div>
         )}
       </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-      
-      {/* Exploration FC25 Results */}
-      {exploreResult && (
-        <div style={{ 
-          backgroundColor: 'white', 
-          padding: '1.5rem', 
-          borderRadius: '0.5rem', 
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-          marginBottom: '2rem'
-        }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-            🔍 Exploration Endpoints EA FC 25
-          </h2>
-          
-          <div style={{ 
-            backgroundColor: exploreResult.success ? '#f0f9ff' : '#fef2f2', 
-            border: `1px solid ${exploreResult.success ? '#3b82f6' : '#ef4444'}`,
-            padding: '1rem', 
-            borderRadius: '0.375rem',
-            fontFamily: 'monospace',
-            fontSize: '0.875rem'
-          }}>
-            <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>
-              {exploreResult.success ? '✅ EXPLORATION FC25 RÉUSSIE' : '❌ ÉCHEC EXPLORATION FC25'}
-            </div>
-            
-            {exploreResult.success ? (
-              <div>
-                <div><strong>Message:</strong> {exploreResult.message}</div>
-                {exploreResult.data && (
-                  <div style={{ marginTop: '1rem' }}>
-                    <div><strong>🎮 Club exploré:</strong> {exploreResult.data.clubId}</div>
-                    <div><strong>🎮 Plateforme:</strong> {exploreResult.data.platform}</div>
-                    
-                    {exploreResult.data.summary && (
-                      <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#f0f9ff', borderRadius: '0.25rem' }}>
-                        <strong>📈 Résumé:</strong> {exploreResult.data.summary.successful}/{exploreResult.data.summary.total} endpoints fonctionnels
-                        <br />
-                        <strong>⚽ Endpoints matchs potentiels:</strong> {exploreResult.data.summary.potentialMatches}
-                        <br />
-                        <strong>👥 Endpoints joueurs potentiels:</strong> {exploreResult.data.summary.potentialPlayers}
-                      </div>
-                    )}
-                    
-                    <div style={{ marginTop: '0.5rem' }}>
-                      <strong>📈 Résultats détaillés:</strong>
-                      <div style={{ marginLeft: '1rem', marginTop: '0.5rem', maxHeight: '400px', overflowY: 'auto' }}>
-                        {exploreResult.data.tests?.map((test: any, index: number) => (
-                          <div key={index} style={{ marginBottom: '0.75rem', padding: '0.75rem', backgroundColor: '#f9fafb', borderRadius: '0.25rem', border: `1px solid ${test.success ? '#d1fae5' : '#fecaca'}` }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
-                              <span>{test.success ? '✅' : '❌'}</span>
-                              <strong style={{ color: test.success ? '#10b981' : '#ef4444' }}>{test.name}</strong>
-                              <span style={{ color: '#6b7280' }}>({test.status})</span>
-                            </div>
-                            
-                            {test.success && test.hasData && (
-                              <div>
-                                <div style={{ fontSize: '0.75rem', color: '#10b981', marginBottom: '0.25rem' }}>
-                                  • Type: {test.isArray ? `Array[${test.arrayLength}]` : 'Object'}
-                                  <br />
-                                  • Clés: {test.dataKeys.slice(0, 8).join(', ')}{test.dataKeys.length > 8 ? '...' : ''}
-                                </div>
-                                
-                                {test.sample && (
-                                  <details style={{ marginTop: '0.25rem' }}>
-                                    <summary style={{ cursor: 'pointer', fontSize: '0.75rem', color: '#6b7280' }}>Voir l'aperçu des données</summary>
-                                    <div style={{ fontSize: '0.6rem', color: '#6b7280', marginTop: '0.25rem', padding: '0.5rem', backgroundColor: 'white', borderRadius: '0.25rem', maxHeight: '100px', overflowY: 'auto', fontFamily: 'monospace' }}>
-                                      {test.sample}
-                                    </div>
-                                  </details>
-                                )}
-                              </div>
-                            )}
-                            
-                            <div style={{ fontSize: '0.6rem', color: '#6b7280', marginTop: '0.25rem' }}>
-                              URL: {test.url}
-                            </div>
-                            
-                            {test.error && (
-                              <div style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '0.25rem' }}>
-                                Erreur: {test.error}
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    {exploreResult.data.recommendations && (
-                      <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#fef3c7', borderRadius: '0.25rem', border: '1px solid #f59e0b' }}>
-                        <strong>📝 Recommandations:</strong>
-                        <div style={{ marginTop: '0.25rem', fontSize: '0.875rem' }}>
-                          {exploreResult.data.recommendations.nextSteps}
-                        </div>
-                        
-                        {exploreResult.data.recommendations.bestMatchEndpoints?.length > 0 && (
-                          <div style={{ marginTop: '0.5rem' }}>
-                            <strong>Meilleurs endpoints pour les matchs:</strong>
-                            <ul style={{ marginLeft: '1rem', marginTop: '0.25rem' }}>
-                              {exploreResult.data.recommendations.bestMatchEndpoints.map((endpoint: any, index: number) => (
-                                <li key={index} style={{ fontSize: '0.75rem' }}>{endpoint.name}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                        
-                        {exploreResult.data.recommendations.bestPlayerEndpoints?.length > 0 && (
-                          <div style={{ marginTop: '0.5rem' }}>
-                            <strong>Meilleurs endpoints pour les joueurs:</strong>
-                            <ul style={{ marginLeft: '1rem', marginTop: '0.25rem' }}>
-                              {exploreResult.data.recommendations.bestPlayerEndpoints.map((endpoint: any, index: number) => (
-                                <li key={index} style={{ fontSize: '0.75rem' }}>{endpoint.name}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div>
-                <div><strong>Erreur:</strong> {exploreResult.error}</div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Test API EA Sports */}
       <div style={{ 
@@ -433,7 +298,7 @@ export default function DebugSyncPage() {
         marginBottom: '2rem'
       }}>
         <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-          🎮 Test API EA Sports
+          Test API EA Sports
         </h2>
         
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
@@ -494,7 +359,7 @@ export default function DebugSyncPage() {
             marginRight: '1rem'
           }}
         >
-          {loading ? 'Test en cours...' : '🎮 Tester endpoints actuels'}
+          {loading ? 'Test en cours...' : 'Tester endpoints actuels'}
         </button>
         
         <button
@@ -510,7 +375,7 @@ export default function DebugSyncPage() {
             marginBottom: '1rem'
           }}
         >
-          {loading ? 'Exploration...' : '🔍 Explorer nouveaux endpoints FC25'}
+          {loading ? 'Exploration...' : 'Explorer nouveaux endpoints FC25'}
         </button>
 
         {eaApiResult && (
@@ -523,7 +388,7 @@ export default function DebugSyncPage() {
             fontSize: '0.875rem'
           }}>
             <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>
-              {eaApiResult.success ? '✅ TESTS API EA SPORTS' : '❌ ÉCHEC API EA SPORTS'}
+              {eaApiResult.success ? 'TESTS API EA SPORTS' : 'ÉCHEC API EA SPORTS'}
             </div>
             
             {eaApiResult.success ? (
@@ -531,10 +396,10 @@ export default function DebugSyncPage() {
                 <div><strong>Message:</strong> {eaApiResult.message}</div>
                 {eaApiResult.data && (
                   <div style={{ marginTop: '1rem' }}>
-                    <div><strong>🎮 Club testé:</strong> {eaApiResult.data.clubId}</div>
-                    <div><strong>🎮 Plateforme:</strong> {eaApiResult.data.platform}</div>
+                    <div><strong>Club testé:</strong> {eaApiResult.data.clubId}</div>
+                    <div><strong>Plateforme:</strong> {eaApiResult.data.platform}</div>
                     <div style={{ marginTop: '0.5rem' }}>
-                      <strong>📈 Résultats des tests:</strong>
+                      <strong>Résultats des tests:</strong>
                       <div style={{ marginLeft: '1rem', marginTop: '0.5rem' }}>
                         {eaApiResult.data.tests?.map((test: any, index: number) => (
                           <div key={index} style={{ marginBottom: '0.5rem', padding: '0.5rem', backgroundColor: '#f9fafb', borderRadius: '0.25rem' }}>
@@ -568,7 +433,7 @@ export default function DebugSyncPage() {
                     
                     {eaApiResult.data.summary && (
                       <div style={{ marginTop: '1rem', padding: '0.5rem', backgroundColor: '#f0f9ff', borderRadius: '0.25rem' }}>
-                        <strong>📈 Résumé:</strong> {eaApiResult.data.summary.successful}/{eaApiResult.data.summary.total} endpoints fonctionnels
+                        <strong>Résumé:</strong> {eaApiResult.data.summary.successful}/{eaApiResult.data.summary.total} endpoints fonctionnels
                         {eaApiResult.data.summary.workingEndpoints.length > 0 && (
                           <div style={{ marginTop: '0.25rem', fontSize: '0.75rem' }}>
                             Endpoints qui marchent: {eaApiResult.data.summary.workingEndpoints.map((ep: any) => ep.name).join(', ')}
@@ -597,7 +462,7 @@ export default function DebugSyncPage() {
         marginBottom: '2rem'
       }}>
         <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem' }}>
-          🧪 Test de Synchronisation
+          Test de Synchronisation
         </h2>
         
         <div style={{ marginBottom: '1rem' }}>
@@ -633,7 +498,7 @@ export default function DebugSyncPage() {
             marginBottom: '1rem'
           }}
         >
-          {loading ? 'Test en cours...' : '🔄 Tester la synchronisation'}
+          {loading ? 'Test en cours...' : 'Tester la synchronisation'}
         </button>
 
         {testResult && (
@@ -646,7 +511,7 @@ export default function DebugSyncPage() {
             fontSize: '0.875rem'
           }}>
             <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>
-              {testResult.success ? '✅ SUCCÈS' : '❌ ÉCHEC'}
+              {testResult.success ? 'SUCCÈS' : 'ÉCHEC'}
             </div>
             
             {testResult.success ? (
@@ -654,12 +519,12 @@ export default function DebugSyncPage() {
                 <div><strong>Message:</strong> {testResult.message}</div>
                 {testResult.debug && (
                   <div style={{ marginTop: '1rem' }}>
-                    <div><strong>🏆 Match:</strong> {testResult.debug.match?.homeClub} vs {testResult.debug.match?.awayClub}</div>
-                    <div><strong>📊 Score:</strong> {testResult.debug.match?.score}</div>
-                    <div><strong>🆔 EA Match ID:</strong> {testResult.debug.match?.eaMatchId}</div>
-                    <div><strong>🎮 Platform:</strong> {testResult.debug.match?.platform}</div>
+                    <div><strong>Match:</strong> {testResult.debug.match?.homeClub} vs {testResult.debug.match?.awayClub}</div>
+                    <div><strong>Score:</strong> {testResult.debug.match?.score}</div>
+                    <div><strong>EA Match ID:</strong> {testResult.debug.match?.eaMatchId}</div>
+                    <div><strong>Platform:</strong> {testResult.debug.match?.platform}</div>
                     <div style={{ marginTop: '0.5rem' }}>
-                      <strong>📡 Réponse EA Sports:</strong>
+                      <strong>Réponse EA Sports:</strong>
                       <div style={{ marginLeft: '1rem' }}>
                         • Clubs: {testResult.debug.eaApiResponse?.hasClubs ? '✅' : '❌'}
                         <br />
@@ -670,7 +535,7 @@ export default function DebugSyncPage() {
                         • Clubs avec joueurs: {testResult.debug.eaApiResponse?.clubsWithPlayers?.join(', ') || 'Aucun'}
                       </div>
                     </div>
-                    <div><strong>💾 Stats existantes:</strong> {testResult.debug.existingPlayerStats} entrées</div>
+                    <div><strong>Stats existantes:</strong> {testResult.debug.existingPlayerStats} entrées</div>
                   </div>
                 )}
               </div>
@@ -699,23 +564,23 @@ export default function DebugSyncPage() {
         borderRadius: '0.375rem',
         fontSize: '0.875rem'
       }}>
-        <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>💡 Actions recommandées:</div>
+        <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>Actions recommandées:</div>
         <ol style={{ marginLeft: '1rem' }}>
-          <li><strong>🔥 🆕 NOUVEAU - Testez d'abord la vraie librairie EA Sports</strong> (bouton vert ci-dessus)</li>
+          <li><strong>NOUVEAU - Testez d'abord la vraie librairie EA Sports</strong> (bouton vert ci-dessus)</li>
           <li>Lancez le <strong>diagnostic général</strong> pour voir l'état de la base</li>
-          <li><strong>🎮 Testez l'API EA Sports</strong> avec le Club ID 40142 pour voir quels endpoints actuels marchent</li>
+          <li><strong>Testez l'API EA Sports</strong> avec le Club ID 40142 pour voir quels endpoints actuels marchent</li>
           <li>Si des endpoints fonctionnels sont trouvés, nous corrigerons le code pour les utiliser</li>
           <li>Une fois l'API fixée, testez la synchronisation d'un match spécifique</li>
         </ol>
         
         <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#dcfce7', borderRadius: '0.25rem', border: '1px solid #16a34a' }}>
-          <strong>🎆 NOUVELLE SOLUTION IMPLÉMENTÉE :</strong>
+          <strong>NOUVELLE SOLUTION IMPLÉMENTÉE :</strong>
           <br />Nous avons implémenté la vraie librairie <code>eafc-clubs-api</code> utilisée par ClubStats Pro.
           <br />Cette librairie devrait résoudre tous les problèmes de synchronisation des stats !
         </div>
         
         <div style={{ marginTop: '0.75rem', padding: '0.75rem', backgroundColor: '#fee2e2', borderRadius: '0.25rem', border: '1px solid #fecaca' }}>
-          <strong>🎯 Problème identifié:</strong>
+          <strong>Problème identifié:</strong>
           <br />1. EA Match IDs manquants dans les matchs validés
           <br />2. Endpoints EA Sports obsolètes (seul 1/5 fonctionne)
           <br />3. Solution: Vraie librairie eafc-clubs-api comme ClubStats Pro

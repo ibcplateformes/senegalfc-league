@@ -10,6 +10,7 @@ export default function DebugSyncPage() {
   const [realLibResult, setRealLibResult] = useState<any>(null);
   const [fixResult, setFixResult] = useState<any>(null);
   const [syncResult, setSyncResult] = useState<any>(null);
+  const [exploreApiResult, setExploreApiResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [matchId, setMatchId] = useState('');
   const [clubId, setClubId] = useState('40142'); // HOF 221 par défaut
@@ -149,6 +150,32 @@ export default function DebugSyncPage() {
     }
   };
 
+  const exploreEaApi = async () => {
+    if (!clubId.trim()) {
+      alert('Veuillez entrer un Club ID');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const response = await fetch('/api/admin/debug/explore-ea-api', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          clubId: clubId.trim(),
+          platform: platform
+        })
+      });
+      const result = await response.json();
+      setExploreApiResult(result);
+    } catch (error) {
+      console.error('Erreur exploration API EA Sports:', error);
+      setExploreApiResult({ success: false, error: 'Erreur réseau' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
       <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '2rem' }}>
@@ -205,6 +232,167 @@ export default function DebugSyncPage() {
                     <br />
                     &nbsp;&nbsp;EA Match ID: <code>{match.eaMatchId || 'MANQUANT'}</code>
                   </div>
+      
+      {/* NOUVEAU: Exploration complète API EA Sports */}
+      <div style={{ 
+        backgroundColor: 'white', 
+        padding: '1.5rem', 
+        borderRadius: '0.5rem', 
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+        marginBottom: '2rem',
+        border: '2px solid #8b5cf6'
+      }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: '#8b5cf6' }}>
+          🔍 Exploration Complète API EA Sports
+        </h2>
+        
+        <p style={{ marginBottom: '1rem', color: '#6b7280' }}>
+          <strong>NOUVEAU !</strong> Explorez en détail ce que contient l'API EA Sports pour comprendre les données disponibles.
+        </p>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.5rem' }}>
+              Club ID EA Sports:
+            </label>
+            <input
+              type="text"
+              value={clubId}
+              onChange={(e) => setClubId(e.target.value)}
+              placeholder="40142 (HOF 221)"
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '1px solid #d1d5db',
+                borderRadius: '0.375rem',
+                fontSize: '0.875rem'
+              }}
+            />
+          </div>
+          
+          <div>
+            <label style={{ display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.5rem' }}>
+              Plateforme:
+            </label>
+            <select
+              value={platform}
+              onChange={(e) => setPlatform(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '0.75rem',
+                border: '1px solid #d1d5db',
+                borderRadius: '0.375rem',
+                fontSize: '0.875rem'
+              }}
+            >
+              <option value="ps5">PlayStation 5</option>
+              <option value="ps4">PlayStation 4</option>
+              <option value="xboxseriesxs">Xbox Series X/S</option>
+              <option value="xboxone">Xbox One</option>
+              <option value="pc">PC</option>
+            </select>
+          </div>
+        </div>
+
+        <button
+          onClick={exploreEaApi}
+          disabled={loading || !clubId.trim()}
+          style={{
+            backgroundColor: loading || !clubId.trim() ? '#9ca3af' : '#8b5cf6',
+            color: 'white',
+            padding: '0.75rem 1.5rem',
+            borderRadius: '0.375rem',
+            border: 'none',
+            cursor: loading || !clubId.trim() ? 'not-allowed' : 'pointer',
+            marginBottom: '1rem',
+            fontSize: '1rem',
+            fontWeight: 'bold'
+          }}
+        >
+          {loading ? '🔍 Exploration en cours...' : '🔍 EXPLORER L\'API EA SPORTS COMPLÈTE'}
+        </button>
+
+        {exploreApiResult && (
+          <div style={{ 
+            backgroundColor: exploreApiResult.success ? '#f0f9ff' : '#fef2f2', 
+            border: `2px solid ${exploreApiResult.success ? '#3b82f6' : '#ef4444'}`,
+            padding: '1rem', 
+            borderRadius: '0.375rem',
+            fontFamily: 'monospace',
+            fontSize: '0.875rem'
+          }}>
+            <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', fontSize: '1rem' }}>
+              {exploreApiResult.success ? '🚀 EXPLORATION RÉUSSIE !' : '❌ ÉCHEC EXPLORATION'}
+            </div>
+            
+            <div><strong>Message:</strong> {exploreApiResult.message}</div>
+            
+            {exploreApiResult.success && exploreApiResult.data && (
+              <div style={{ marginTop: '1rem' }}>
+                <div><strong>Club ID:</strong> {exploreApiResult.data.clubId}</div>
+                <div><strong>Plateforme:</strong> {exploreApiResult.data.platform}</div>
+                <div><strong>Timestamp:</strong> {exploreApiResult.data.timestamp}</div>
+                
+                {exploreApiResult.data.summary && (
+                  <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#f0fdf4', borderRadius: '0.25rem', border: '1px solid #10b981' }}>
+                    <strong>📊 RÉSUMÉ DE L'EXPLORATION:</strong>
+                    <div style={{ marginTop: '0.5rem' }}>
+                      <div>• Club Info: {exploreApiResult.data.summary.clubInfoSuccess ? '✅' : '❌'}</div>
+                      <div>• Membres trouvés: {exploreApiResult.data.summary.membersFound}</div>
+                      <div>• Matchs trouvés: {exploreApiResult.data.summary.matchesFound}</div>
+                      <div>• Peut procéder au matching: {exploreApiResult.data.summary.canProceedWithMatching ? '✅ OUI' : '❌ NON'}</div>
+                    </div>
+                  </div>
+                )}
+                
+                {exploreApiResult.data.data?.matchAnalysis && exploreApiResult.data.data.matchAnalysis.length > 0 && (
+                  <div style={{ marginTop: '1rem' }}>
+                    <strong>🏆 ANALYSE DES MATCHS (5 premiers):</strong>
+                    <div style={{ marginLeft: '1rem', marginTop: '0.5rem', maxHeight: '300px', overflowY: 'auto' }}>
+                      {exploreApiResult.data.data.matchAnalysis.map((match: any, index: number) => (
+                        <div key={index} style={{ marginBottom: '0.75rem', padding: '0.5rem', backgroundColor: '#f9fafb', borderRadius: '0.25rem', border: '1px solid #e5e7eb' }}>
+                          <div style={{ fontWeight: 'bold' }}>⚽ Match {match.index}</div>
+                          <div style={{ fontSize: '0.75rem', marginTop: '0.25rem' }}>
+                            <div><strong>Match ID:</strong> {match.matchId}</div>
+                            <div><strong>Date:</strong> {new Date(match.date).toLocaleString()}</div>
+                            <div><strong>Clubs ({match.clubCount}):</strong></div>
+                            <div style={{ marginLeft: '1rem' }}>
+                              {Object.entries(match.clubs).map(([clubId, club]: [string, any]) => (
+                                <div key={clubId}>• {club.name}: {club.goals} buts ({club.result})</div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                {exploreApiResult.data.data?.matches?.success && (
+                  <div style={{ marginTop: '1rem', padding: '0.75rem', backgroundColor: '#fffbeb', borderRadius: '0.25rem', border: '1px solid #f59e0b' }}>
+                    <strong>📁 DONNÉES BRUTES DISPONIBLES:</strong>
+                    <div style={{ fontSize: '0.75rem', marginTop: '0.5rem' }}>
+                      <div>• Club Info: {exploreApiResult.data.data.clubInfo?.success ? '✅ Disponible' : '❌ Indisponible'}</div>
+                      <div>• Member Stats: {exploreApiResult.data.data.memberStats?.success ? `✅ ${exploreApiResult.data.data.memberStats.memberCount} membres` : '❌ Indisponible'}</div>
+                      <div>• Matches: {exploreApiResult.data.data.matches?.success ? `✅ ${exploreApiResult.data.data.matches.matchCount} matchs` : '❌ Indisponible'}</div>
+                    </div>
+                    
+                    <div style={{ marginTop: '0.75rem', fontSize: '0.75rem', color: '#92400e' }}>
+                      <strong>📝 JSON brut accessible dans:</strong> exploreApiResult.data.data.matches.raw
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {exploreApiResult.error && (
+              <div style={{ marginTop: '1rem' }}>
+                <strong>Erreur:</strong> {exploreApiResult.error}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
                 ))}              
               </div>
             )}

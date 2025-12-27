@@ -1,1 +1,325 @@
-// 🔥 NOUVELLE IMPLÉMENTATION AVEC LA VRAIE LIBRAIRIE EAFC-CLUBS-API\n// Basée sur ClubStats Pro qui fonctionne parfaitement\n\nconst { EAFCApiService } = require('eafc-clubs-api');\n\n// Créer une instance du service\nconst api = new EAFCApiService();\n\n// Mapping des plateformes pour l'API EA\nconst PLATFORM_MAP = {\n  'ps5': 'common-gen5',\n  'ps4': 'common-gen4',\n  'xboxseriesxs': 'common-gen5',\n  'xboxone': 'common-gen4',\n  'pc': 'common-gen5',\n};\n\n// Types pour compatibilité\nexport interface ClubMatchData {\n  id?: string;\n  matchId?: string;\n  opponent: string;\n  scoreFor: number;\n  scoreAgainst: number;\n  date: Date;\n  result: 'win' | 'draw' | 'loss';\n  competition?: string;\n  myScore?: number;\n  opponentScore?: number;\n}\n\nexport interface ClubInfoData {\n  id: string;\n  name: string;\n  platform: string;\n  members?: any[];\n}\n\nexport interface EAPlayerStatsData {\n  playerId: string;\n  playerName: string;\n  position: string;\n  matchesPlayed: number;\n  minutesPlayed: number;\n  averageRating: number;\n  goals: number;\n  assists: number;\n  shots: number;\n  shotsOnTarget: number;\n  shotAccuracy: number;\n  dribbles: number;\n  dribbleSuccess: number;\n  crosses: number;\n  crossAccuracy: number;\n  corners: number;\n  freekicks: number;\n  penalties: number;\n  penaltiesScored: number;\n  tackles: number;\n  tackleSuccess: number;\n  interceptions: number;\n  clearances: number;\n  blocks: number;\n  aerialDuelsWon: number;\n  aerialDuelsTotal: number;\n  foulsCommitted: number;\n  foulsWon: number;\n  saves: number;\n  goalsConceded: number;\n  cleanSheets: number;\n  catches: number;\n  punches: number;\n  distributions: number;\n  distributionSuccess: number;\n  penaltiesSaved: number;\n  penaltiesFaced: number;\n  distanceRun: number;\n  topSpeed: number;\n  sprints: number;\n  yellowCards: number;\n  redCards: number;\n  manOfTheMatch: number;\n  passesCompleted: number;\n  passesAttempted: number;\n  passAccuracy: number;\n  longPasses: number;\n  longPassAccuracy: number;\n  throughBalls: number;\n  keyPasses: number;\n  form: number;\n  consistency: number;\n  clutchGoals: number;\n}\n\nexport interface EAClubCompleteData {\n  clubId: string;\n  clubName: string;\n  platform: string;\n  division: string;\n  rank: number;\n  points: number;\n  wins: number;\n  draws: number;\n  losses: number;\n  goalsFor: number;\n  goalsAgainst: number;\n  players: EAPlayerStatsData[];\n  recentMatches: ClubMatchData[];\n  lastUpdated: Date;\n  seasonYear: string;\n}\n\n/**\n * 🔥 VRAIE FONCTION - Récupère les détails complets d'un match spécifique avec les stats des joueurs\n * Utilise la vraie librairie eafc-clubs-api comme ClubStats Pro\n */\nexport async function fetchClubMatchDetails(matchId: string, platform: string): Promise<any> {\n  console.log(`🔍 Récupération détails match: ${matchId} (${platform}) - VRAIE LIBRAIRIE`);\n  \n  try {\n    const apiPlatform = PLATFORM_MAP[platform as keyof typeof PLATFORM_MAP] || 'common-gen5';\n    \n    // 🔥 UTILISER LA VRAIE MÉTHODE DE L'API\n    const matchDetails = await api.matchDetails({\n      matchId: matchId,\n      platform: apiPlatform\n    });\n    \n    console.log(`✅ Détails du match récupérés avec la vraie librairie`);\n    \n    // Vérifier que les données des joueurs sont présentes\n    if (matchDetails && matchDetails.players) {\n      const totalPlayers = Object.keys(matchDetails.players).reduce((sum, clubId) => {\n        return sum + Object.keys(matchDetails.players[clubId] || {}).length;\n      }, 0);\n      console.log(`👥 ${totalPlayers} joueurs trouvés dans les détails du match`);\n    }\n    \n    return matchDetails;\n    \n  } catch (error: any) {\n    console.error(`❌ Erreur récupération détails match ${matchId}:`, error);\n    throw error;\n  }\n}\n\n/**\n * 🔥 VRAIE FONCTION - Récupère les informations COMPLETES d'un club EA Sports avec ses membres\n * Utilise la vraie librairie eafc-clubs-api comme ClubStats Pro\n */\nexport async function fetchClubInfo(clubId: string, platform: string): Promise<ClubInfoData | null> {\n  console.log(`🔍 Récupération infos COMPLETES club EA: ${clubId} (${platform}) - VRAIE LIBRAIRIE`);\n  \n  try {\n    const apiPlatform = PLATFORM_MAP[platform as keyof typeof PLATFORM_MAP] || 'common-gen5';\n    \n    // 🔥 UTILISER LA VRAIE MÉTHODE DE L'API\n    const response = await api.clubInfo({\n      clubIds: clubId,\n      platform: apiPlatform\n    });\n    \n    console.log(`✅ Réponse API EA Sports club info reçue avec la vraie librairie`);\n    \n    // L'API retourne un objet avec les clubs indexés par ID\n    const clubInfo = response[clubId];\n    if (!clubInfo) {\n      console.log(`❌ Club ${clubId} non trouvé dans la réponse API`);\n      return null;\n    }\n    \n    console.log(`✅ Club trouvé: \"${clubInfo.name}\"`);\n    \n    // Récupérer les membres du club si disponibles\n    let members = [];\n    try {\n      const memberStats = await api.memberCareerStats({\n        clubId: clubId,\n        platform: apiPlatform\n      });\n      \n      if (memberStats && memberStats.members) {\n        members = Object.values(memberStats.members).map((member: any) => ({\n          name: member.name,\n          position: member.favoritePosition || 'ATT',\n          overall: member.ratingAve || 0,\n          isActive: true,\n          playerId: member.playerId || member.name.replace(/\\s+/g, '_')\n        }));\n        console.log(`👥 ${members.length} membres trouvés pour le club`);\n      }\n    } catch (memberError) {\n      console.log(`⚠️  Impossible de récupérer les membres: ${memberError}`);\n    }\n    \n    return {\n      id: clubId,\n      name: clubInfo.name || `Club ${clubId}`,\n      platform: platform,\n      members: members\n    };\n    \n  } catch (error: any) {\n    console.error(`❌ Erreur récupération infos club ${clubId}:`, error);\n    \n    // Fallback sur les noms hardcodés\n    const clubNames: { [key: string]: string } = {\n      '40142': 'HOF 221',\n      '24000': 'BUUR MFC', \n      '29739': 'NEK BI',\n      '460504': 'FC BOUNDOUXATAL',\n      '46871': 'HEMLE FC',\n      '1039553': 'ASC GALGUI'\n    };\n    \n    const name = clubNames[clubId] || `Club ${clubId}`;\n    return { id: clubId, name: name, platform: platform };\n  }\n}\n\n/**\n * 🔥 VRAIE FONCTION - Récupère les derniers matchs d'un club EA Sports\n * Utilise la vraie librairie eafc-clubs-api comme ClubStats Pro\n */\nexport async function fetchClubMatches(clubId: string, platform: string, limit: number = 10): Promise<ClubMatchData[]> {\n  console.log(`⚽ Récupération matchs club EA: ${clubId} (${platform}) - VRAIE LIBRAIRIE`);\n  \n  try {\n    const apiPlatform = PLATFORM_MAP[platform as keyof typeof PLATFORM_MAP] || 'common-gen5';\n    \n    // 🔥 UTILISER LA VRAIE MÉTHODE DE L'API - Récupérer différents types de matchs\n    const matchTypes = ['leagueMatch', 'friendlyMatch', 'playoffMatch'];\n    const allMatches: any[] = [];\n    const matchIds = new Set<string>();\n    \n    for (const matchType of matchTypes) {\n      console.log(`🔗 Appel API EA: ${matchType}`);\n      \n      try {\n        const matches = await api.matchesStats({\n          clubIds: clubId,\n          platform: apiPlatform,\n          matchType: matchType\n        });\n        \n        if (Array.isArray(matches)) {\n          // Ajouter uniquement les matchs uniques\n          matches.forEach((match: any) => {\n            if (match.matchId && !matchIds.has(match.matchId)) {\n              matchIds.add(match.matchId);\n              allMatches.push({ ...match, matchType });\n            }\n          });\n          console.log(`  ✅ ${matchType}: ${matches.length} matchs récupérés`);\n        }\n      } catch (error: any) {\n        console.log(`  ⚠️  ${matchType}: ${error.message}`);\n      }\n    }\n    \n    console.log(`📊 Total unique matches: ${allMatches.length}`);\n    \n    // Convertir au format ClubMatchData (limiter aux plus récents)\n    const matches = allMatches.slice(0, limit).map((match: any) => {\n      const clubIds = Object.keys(match.clubs || {});\n      const opponentId = clubIds.find(id => id !== clubId);\n      \n      if (!opponentId) return null;\n\n      const myClub = match.clubs[clubId];\n      const opponentClub = match.clubs[opponentId];\n\n      const scoreFor = parseInt(myClub?.goals) || 0;\n      const scoreAgainst = parseInt(opponentClub?.goals) || 0;\n\n      let result: 'win' | 'draw' | 'loss';\n      if (scoreFor > scoreAgainst) {\n        result = 'win';\n      } else if (scoreFor < scoreAgainst) {\n        result = 'loss';\n      } else {\n        result = 'draw';\n      }\n\n      return {\n        matchId: match.matchId,\n        opponent: opponentClub?.details?.name || 'Équipe inconnue',\n        scoreFor,\n        scoreAgainst,\n        myScore: scoreFor, // Alias pour compatibility\n        opponentScore: scoreAgainst, // Alias pour compatibility\n        result,\n        date: new Date(match.timestamp * 1000),\n        competition: match.matchType === 'friendlyMatch' ? 'Friendly' \n                   : match.matchType === 'playoffMatch' ? 'Playoff'\n                   : 'League'\n      };\n    }).filter(Boolean) as ClubMatchData[];\n\n    console.log(`✅ ${matches.length} matchs récupérés avec succès pour ${clubId}`);\n    return matches;\n\n  } catch (error: any) {\n    console.error(`❌ Erreur récupération matchs ${clubId}:`, error);\n    return [];\n  }\n}\n\n/**\n * 🔥 VRAIE FONCTION - Récupère les statistiques COMPLETES d'un club EA Sports (joueurs + stats)\n * Utilise la vraie librairie eafc-clubs-api comme ClubStats Pro\n */\nexport async function fetchCompleteClubStats(\n  clubId: string, \n  platform: string\n): Promise<EAClubCompleteData | null> {\n  \n  console.log(`🎯 === RÉCUPÉRATION COMPLETE CLUB ${clubId} (${platform}) - VRAIE LIBRAIRIE ===`);\n  \n  try {\n    const apiPlatform = PLATFORM_MAP[platform as keyof typeof PLATFORM_MAP] || 'common-gen5';\n    \n    // Récupérer les infos de base du club\n    const clubInfo = await fetchClubInfo(clubId, platform);\n    if (!clubInfo) {\n      console.log(`❌ Infos de base du club ${clubId} non disponibles`);\n      return null;\n    }\n    \n    console.log(`📈 Traitement des stats du club \"${clubInfo.name}\"`);\n    \n    // 🔥 UTILISER LA VRAIE MÉTHODE DE L'API - Récupérer les stats des membres\n    const players: EAPlayerStatsData[] = [];\n    \n    try {\n      const memberStats = await api.memberCareerStats({\n        clubId: clubId,\n        platform: apiPlatform\n      });\n      \n      if (memberStats && memberStats.members) {\n        console.log(`👥 ${Object.keys(memberStats.members).length} membres avec stats trouvés`);\n        \n        for (const [playerId, member] of Object.entries(memberStats.members as any)) {\n          const playerData: EAPlayerStatsData = {\n            playerId: playerId || member.name?.replace(/\\s+/g, '_'),\n            playerName: member.name || 'Joueur Inconnu',\n            position: member.favoritePosition || 'ATT',\n            matchesPlayed: member.gamesPlayed || 0,\n            minutesPlayed: (member.gamesPlayed || 0) * 90, // Estimation\n            averageRating: member.ratingAve || 0,\n            \n            // Stats offensives\n            goals: member.goals || 0,\n            assists: member.assists || 0,\n            shots: member.shots || 0,\n            shotsOnTarget: member.shotsOnTarget || 0,\n            shotAccuracy: member.shotsOnTarget && member.shots ? \n              Math.round((member.shotsOnTarget / member.shots) * 100) : 0,\n            dribbles: member.dribbles || 0,\n            dribbleSuccess: member.dribbleSuccess || 0,\n            crosses: member.crosses || 0,\n            crossAccuracy: member.crossAccuracy || 0,\n            corners: member.corners || 0,\n            freekicks: member.freekicks || 0,\n            penalties: member.penalties || 0,\n            penaltiesScored: member.penaltiesScored || 0,\n            \n            // Stats défensives\n            tackles: member.tackles || 0,\n            tackleSuccess: member.tackleSuccess || 0,\n            interceptions: member.interceptions || 0,\n            clearances: member.clearances || 0,\n            blocks: member.blocks || 0,\n            aerialDuelsWon: member.aerialDuelsWon || 0,\n            aerialDuelsTotal: member.aerialDuelsTotal || 0,\n            foulsCommitted: member.foulsCommitted || 0,\n            foulsWon: member.foulsWon || 0,\n            \n            // Stats gardien\n            saves: member.saves || 0,\n            goalsConceded: member.goalsConceded || 0,\n            cleanSheets: member.cleanSheets || 0,\n            catches: member.catches || 0,\n            punches: member.punches || 0,\n            distributions: member.distributions || 0,\n            distributionSuccess: member.distributionSuccess || 0,\n            penaltiesSaved: member.penaltiesSaved || 0,\n            penaltiesFaced: member.penaltiesFaced || 0,\n            \n            // Stats physiques & passes\n            distanceRun: member.distanceRun || 0,\n            topSpeed: member.topSpeed || 0,\n            sprints: member.sprints || 0,\n            passesCompleted: member.passesCompleted || 0,\n            passesAttempted: member.passesAttempted || 0,\n            passAccuracy: member.passesCompleted && member.passesAttempted ?\n              Math.round((member.passesCompleted / member.passesAttempted) * 100) : 0,\n            longPasses: member.longPasses || 0,\n            longPassAccuracy: member.longPassAccuracy || 0,\n            throughBalls: member.throughBalls || 0,\n            keyPasses: member.keyPasses || 0,\n            \n            // Discipline & récompenses\n            yellowCards: member.yellowCard || 0,\n            redCards: member.redCard || 0,\n            manOfTheMatch: member.manOfTheMatch || 0,\n            \n            // Stats de performance\n            form: member.form || 0,\n            consistency: member.consistency || 0,\n            clutchGoals: member.clutchGoals || 0\n          };\n          \n          players.push(playerData);\n          console.log(`  ✅ ${playerData.playerName}: ${playerData.goals} buts, ${playerData.assists} passes, note ${playerData.averageRating}`);\n        }\n      } else {\n        console.log(`⚠️  Pas de membres avec stats pour le club ${clubId}`);\n      }\n    } catch (memberError) {\n      console.error(`❌ Erreur récupération stats membres: ${memberError}`);\n    }\n    \n    // Récupérer les matchs récents\n    const recentMatches = await fetchClubMatches(clubId, platform, 10);\n    \n    // Construire les stats du club\n    const clubCompleteData: EAClubCompleteData = {\n      clubId: clubInfo.id,\n      clubName: clubInfo.name,\n      platform: platform,\n      division: 'Ligue Sénégalaise',\n      rank: 0,\n      points: 0,\n      wins: 0,\n      draws: 0,\n      losses: 0,\n      goalsFor: players.reduce((sum, p) => sum + p.goals, 0),\n      goalsAgainst: 0,\n      players: players,\n      recentMatches: recentMatches,\n      lastUpdated: new Date(),\n      seasonYear: new Date().getFullYear().toString()\n    };\n    \n    console.log(`🎉 === RÉCUPÉRATION TERMINÉE ===`);\n    console.log(`📈 Résumé pour \"${clubInfo.name}\": ${players.length} joueurs, ${clubCompleteData.goalsFor} buts`);\n    \n    return clubCompleteData;\n    \n  } catch (error: any) {\n    console.error(`❌ Erreur récupération stats complètes club ${clubId}:`, error);\n    return null;\n  }\n}\n\n/**\n * 🔥 VRAIE FONCTION - Détermine si deux clubs se sont affrontés récemment\n * Utilise les données des vraies APIs\n */\nexport function findInterClubMatch(\n  club1Matches: ClubMatchData[], \n  club2Matches: ClubMatchData[],\n  club1Name: string,\n  club2Name: string\n): ClubMatchData | null {\n  console.log(`🔍 Recherche match inter-clubs: \"${club1Name}\" vs \"${club2Name}\"`);\n  \n  // Chercher un match où club1 a joué contre club2 (par nom d'adversaire)\n  for (const match of club1Matches) {\n    // Normaliser les noms pour la comparaison\n    const opponentName = match.opponent.toLowerCase().trim();\n    const searchName = club2Name.toLowerCase().trim();\n    \n    // Vérification exacte ou partielle du nom\n    if (opponentName === searchName || \n        opponentName.includes(searchName) || \n        searchName.includes(opponentName)) {\n      \n      console.log(`✅ Match trouvé: ${club1Name} vs ${match.opponent} (${match.scoreFor}-${match.scoreAgainst})`);\n      return match;\n    }\n  }\n  \n  // Chercher dans l'autre sens (club2 contre club1)\n  for (const match of club2Matches) {\n    const opponentName = match.opponent.toLowerCase().trim();\n    const searchName = club1Name.toLowerCase().trim();\n    \n    if (opponentName === searchName || \n        opponentName.includes(searchName) || \n        searchName.includes(opponentName)) {\n      \n      // Inverser le résultat puisque c'est du point de vue de club2\n      let invertedResult: 'win' | 'draw' | 'loss';\n      if (match.result === 'win') invertedResult = 'loss';\n      else if (match.result === 'loss') invertedResult = 'win';\n      else invertedResult = 'draw';\n      \n      const invertedMatch: ClubMatchData = {\n        ...match,\n        opponent: club2Name,\n        scoreFor: match.scoreAgainst,\n        scoreAgainst: match.scoreFor,\n        result: invertedResult\n      };\n      \n      console.log(`✅ Match trouvé (inversé): ${club1Name} vs ${club2Name} (${invertedMatch.scoreFor}-${invertedMatch.scoreAgainst})`);\n      return invertedMatch;\n    }\n  }\n  \n  console.log(`❌ Aucun match trouvé entre \"${club1Name}\" et \"${club2Name}\"`);\n  return null;\n}\n\n/**\n * Vérifie si un club existe et est accessible via l'API EA\n */\nexport async function validateClub(clubId: string, platform: string): Promise<boolean> {\n  const clubInfo = await fetchClubInfo(clubId, platform);\n  return clubInfo !== null;\n}\n\nconsole.log('✅ EA Sports API - VRAIE LIBRAIRIE CHARGÉE (eafc-clubs-api)');\n
+// 🔥 IMPLÉMENTATION RÉELLE EA SPORTS API
+const { EAFCApiService } = require('eafc-clubs-api');
+
+export interface ClubMatchData {
+  id?: string;
+  matchId?: string;
+  opponent: string;
+  scoreFor: number;
+  scoreAgainst: number;
+  date: Date;
+  result: 'win' | 'draw' | 'loss';
+  competition?: string;
+  myScore?: number;
+  opponentScore?: number;
+}
+
+export interface ClubInfoData {
+  id: string;
+  name: string;
+  platform: string;
+  teamId?: number;
+}
+
+export interface EAPlayerStatsData {
+  playerId: string;
+  playerName: string;
+  position: string;
+  matchesPlayed: number;
+  minutesPlayed: number;
+  averageRating: number;
+  goals: number;
+  assists: number;
+  shots: number;
+  shotsOnTarget: number;
+  shotAccuracy: number;
+  dribbles: number;
+  dribbleSuccess: number;
+  crosses: number;
+  crossAccuracy: number;
+  corners: number;
+  freekicks: number;
+  penalties: number;
+  penaltiesScored: number;
+  tackles: number;
+  tackleSuccess: number;
+  interceptions: number;
+  clearances: number;
+  blocks: number;
+  aerialDuelsWon: number;
+  aerialDuelsTotal: number;
+  foulsCommitted: number;
+  foulsWon: number;
+  saves: number;
+  goalsConceded: number;
+  cleanSheets: number;
+  catches: number;
+  punches: number;
+  distributions: number;
+  distributionSuccess: number;
+  penaltiesSaved: number;
+  penaltiesFaced: number;
+  distanceRun: number;
+  topSpeed: number;
+  sprints: number;
+  yellowCards: number;
+  redCards: number;
+  manOfTheMatch: number;
+  passesCompleted: number;
+  passesAttempted: number;
+  passAccuracy: number;
+  longPasses: number;
+  longPassAccuracy: number;
+  throughBalls: number;
+  keyPasses: number;
+  form: number;
+  consistency: number;
+  clutchGoals: number;
+}
+
+export interface EAClubCompleteData {
+  clubId: string;
+  clubName: string;
+  platform: string;
+  division: string;
+  rank: number;
+  points: number;
+  wins: number;
+  draws: number;
+  losses: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  players: EAPlayerStatsData[];
+  recentMatches: ClubMatchData[];
+  lastUpdated: Date;
+  seasonYear: string;
+}
+
+let apiInstance: any = null;
+
+function getEAAPI() {
+  if (!apiInstance) {
+    apiInstance = new EAFCApiService();
+  }
+  return apiInstance;
+}
+
+function mapPlatform(platform: string): string {
+  const PLATFORM_MAP: { [key: string]: string } = {
+    'ps5': 'common-gen5',
+    'ps4': 'common-gen4', 
+    'xboxseriesxs': 'common-gen5',
+    'xboxone': 'common-gen4',
+    'pc': 'common-gen5',
+  };
+  return PLATFORM_MAP[platform.toLowerCase()] || 'common-gen5';
+}
+
+export async function fetchClubInfo(clubId: string, platform: string): Promise<ClubInfoData | null> {
+  console.log(`🔍 [EA-API] Récupération infos club: ${clubId} (${platform})`);
+  
+  try {
+    const api = getEAAPI();
+    const mappedPlatform = mapPlatform(platform);
+    
+    const response = await api.clubInfo({
+      clubIds: clubId,
+      platform: mappedPlatform
+    });
+    
+    const clubInfo = response[clubId];
+    
+    if (!clubInfo) {
+      return null;
+    }
+    
+    console.log(`✅ [EA-API] Club trouvé: "${clubInfo.name}"`);
+    
+    return {
+      id: clubInfo.clubId.toString(),
+      name: clubInfo.name,
+      platform: platform,
+      teamId: clubInfo.teamId
+    };
+    
+  } catch (error: any) {
+    console.error(`❌ [EA-API] Erreur récupération club ${clubId}:`, error.message);
+    return null;
+  }
+}
+
+export async function fetchClubMatches(clubId: string, platform: string, limit: number = 10): Promise<ClubMatchData[]> {
+  console.log(`⚽ [EA-API] Récupération matchs club: ${clubId} (${platform})`);
+  
+  try {
+    const api = getEAAPI();
+    const mappedPlatform = mapPlatform(platform);
+    
+    const matches = await api.matchesStats({
+      clubIds: clubId,
+      platform: mappedPlatform,
+      matchType: 'leagueMatch'
+    });
+    
+    if (!Array.isArray(matches) || matches.length === 0) {
+      return [];
+    }
+    
+    const convertedMatches: ClubMatchData[] = matches.slice(0, limit).map((match: any) => {
+      const clubIds = Object.keys(match.clubs || {});
+      const opponentId = clubIds.find(id => id !== clubId);
+      
+      if (!opponentId) {
+        return null;
+      }
+
+      const myClub = match.clubs[clubId];
+      const opponentClub = match.clubs[opponentId];
+
+      const scoreFor = parseInt(myClub?.goals || '0');
+      const scoreAgainst = parseInt(opponentClub?.goals || '0');
+
+      let result: 'win' | 'draw' | 'loss';
+      if (scoreFor > scoreAgainst) {
+        result = 'win';
+      } else if (scoreFor < scoreAgainst) {
+        result = 'loss';
+      } else {
+        result = 'draw';
+      }
+
+      return {
+        matchId: match.matchId,
+        opponent: opponentClub?.details?.name || 'Équipe inconnue',
+        scoreFor,
+        scoreAgainst,
+        myScore: scoreFor,
+        opponentScore: scoreAgainst,
+        result,
+        date: new Date(match.timestamp * 1000),
+        competition: 'League'
+      };
+    }).filter(Boolean) as ClubMatchData[];
+
+    console.log(`✅ [EA-API] ${convertedMatches.length} matchs convertis avec succès`);
+    return convertedMatches;
+
+  } catch (error: any) {
+    console.error(`❌ [EA-API] Erreur récupération matchs ${clubId}:`, error.message);
+    return [];
+  }
+}
+
+export async function fetchPlayerStats(clubId: string, platform: string): Promise<EAPlayerStatsData[]> {
+  console.log(`👥 [EA-API] Récupération stats joueurs club: ${clubId}`);
+  
+  try {
+    const api = getEAAPI();
+    const mappedPlatform = mapPlatform(platform);
+    
+    const memberStats = await api.memberCareerStats({
+      clubId: clubId,
+      platform: mappedPlatform
+    });
+    
+    if (!memberStats || !memberStats.members) {
+      return [];
+    }
+    
+    const players: EAPlayerStatsData[] = Object.values(memberStats.members).map((member: any, index: number) => {
+      return {
+        playerId: member.playerId || index.toString(),
+        playerName: member.name || 'Joueur inconnu',
+        position: member.favoritePosition || 'UNK',
+        matchesPlayed: parseInt(member.gamesPlayed || '0'),
+        minutesPlayed: 0,
+        averageRating: parseFloat(member.ratingAve || '0'),
+        goals: parseInt(member.goals || '0'),
+        assists: parseInt(member.assists || '0'),
+        shots: 0, shotsOnTarget: 0, shotAccuracy: 0, dribbles: 0, dribbleSuccess: 0,
+        crosses: 0, crossAccuracy: 0, corners: 0, freekicks: 0, penalties: 0,
+        penaltiesScored: 0, tackles: 0, tackleSuccess: 0, interceptions: 0,
+        clearances: 0, blocks: 0, aerialDuelsWon: 0, aerialDuelsTotal: 0,
+        foulsCommitted: 0, foulsWon: 0, saves: 0, goalsConceded: 0, cleanSheets: 0,
+        catches: 0, punches: 0, distributions: 0, distributionSuccess: 0,
+        penaltiesSaved: 0, penaltiesFaced: 0, distanceRun: 0, topSpeed: 0,
+        sprints: 0, yellowCards: 0, redCards: 0,
+        manOfTheMatch: parseInt(member.manOfTheMatch || '0'),
+        passesCompleted: 0, passesAttempted: 0, passAccuracy: 0, longPasses: 0,
+        longPassAccuracy: 0, throughBalls: 0, keyPasses: 0, form: 0,
+        consistency: 0, clutchGoals: 0
+      };
+    });
+    
+    console.log(`✅ [EA-API] ${players.length} joueurs convertis avec succès`);
+    return players;
+    
+  } catch (error: any) {
+    console.error(`❌ [EA-API] Erreur récupération stats joueurs:`, error.message);
+    return [];
+  }
+}
+
+export async function fetchCompleteClubStats(clubId: string, platform: string): Promise<EAClubCompleteData | null> {
+  try {
+    const clubInfo = await fetchClubInfo(clubId, platform);
+    if (!clubInfo) return null;
+
+    const recentMatches = await fetchClubMatches(clubId, platform, 10);
+    const players = await fetchPlayerStats(clubId, platform);
+
+    let wins = 0, draws = 0, losses = 0, goalsFor = 0, goalsAgainst = 0;
+    
+    recentMatches.forEach(match => {
+      if (match.result === 'win') wins++;
+      else if (match.result === 'draw') draws++;
+      else if (match.result === 'loss') losses++;
+      
+      goalsFor += match.scoreFor;
+      goalsAgainst += match.scoreAgainst;
+    });
+
+    return {
+      clubId: clubInfo.id,
+      clubName: clubInfo.name,
+      platform: platform,
+      division: 'Ligue Sénégalaise',
+      rank: 1,
+      points: (wins * 3) + draws,
+      wins, draws, losses, goalsFor, goalsAgainst,
+      players,
+      recentMatches,
+      lastUpdated: new Date(),
+      seasonYear: '2025'
+    };
+  } catch (error: any) {
+    console.error(`❌ [EA-API] Erreur récupération complète:`, error.message);
+    return null;
+  }
+}
+
+export function findInterClubMatch(
+  club1Matches: ClubMatchData[], 
+  club2Matches: ClubMatchData[],
+  club1Name: string,
+  club2Name: string
+): ClubMatchData | null {
+  
+  for (const match of club1Matches) {
+    const opponentName = match.opponent.toLowerCase().trim();
+    const searchName = club2Name.toLowerCase().trim();
+    
+    if (opponentName === searchName || 
+        opponentName.includes(searchName) || 
+        searchName.includes(opponentName)) {
+      return match;
+    }
+  }
+  
+  return null;
+}
+
+export async function validateClub(clubId: string, platform: string): Promise<boolean> {
+  const clubInfo = await fetchClubInfo(clubId, platform);
+  return clubInfo !== null;
+}

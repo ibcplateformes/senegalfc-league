@@ -8,6 +8,8 @@ export default function DebugSyncPage() {
   const [eaApiResult, setEaApiResult] = useState<any>(null);
   const [exploreResult, setExploreResult] = useState<any>(null);
   const [realLibResult, setRealLibResult] = useState<any>(null);
+  const [fixResult, setFixResult] = useState<any>(null);
+  const [syncResult, setSyncResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [matchId, setMatchId] = useState('');
   const [clubId, setClubId] = useState('40142'); // HOF 221 par défaut
@@ -115,6 +117,38 @@ export default function DebugSyncPage() {
     }
   };
 
+  const fixMissingEaMatchIds = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/admin/debug/fix-missing-ea-match-ids', {
+        method: 'POST'
+      });
+      const result = await response.json();
+      setFixResult(result);
+    } catch (error) {
+      console.error('Erreur récupération EA Match IDs:', error);
+      setFixResult({ success: false, error: 'Erreur réseau' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const syncAllPlayers = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/admin/debug/sync-all-players', {
+        method: 'POST'
+      });
+      const result = await response.json();
+      setSyncResult(result);
+    } catch (error) {
+      console.error('Erreur synchronisation joueurs:', error);
+      setSyncResult({ success: false, error: 'Erreur réseau' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
       <h1 style={{ fontSize: '2rem', fontWeight: 'bold', marginBottom: '2rem' }}>
@@ -171,6 +205,199 @@ export default function DebugSyncPage() {
                     <br />
                     &nbsp;&nbsp;EA Match ID: <code>{match.eaMatchId || 'MANQUANT'}</code>
                   </div>
+      
+      {/* Script de Migration - Récupération EA Match IDs */}
+      <div style={{ 
+        backgroundColor: 'white', 
+        padding: '1.5rem', 
+        borderRadius: '0.5rem', 
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+        marginBottom: '2rem'
+      }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem' }}>
+          ÉTAPE 1: Récupération EA Match IDs Manquants
+        </h2>
+        
+        <p style={{ marginBottom: '1rem', color: '#6b7280' }}>
+          Ce script va chercher les EA Match IDs manquants pour vos matchs validés en fouillant dans l'API EA Sports.
+        </p>
+        
+        <button
+          onClick={fixMissingEaMatchIds}
+          disabled={loading}
+          style={{
+            backgroundColor: loading ? '#9ca3af' : '#dc2626',
+            color: 'white',
+            padding: '0.75rem 1.5rem',
+            borderRadius: '0.375rem',
+            border: 'none',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            marginBottom: '1rem'
+          }}
+        >
+          {loading ? 'Recherche en cours...' : 'ÉTAPE 1: Récupérer les EA Match IDs'}
+        </button>
+        
+        {fixResult && (
+          <div style={{ 
+            backgroundColor: fixResult.success ? '#dcfce7' : '#fef2f2', 
+            border: `1px solid ${fixResult.success ? '#16a34a' : '#ef4444'}`,
+            padding: '1rem', 
+            borderRadius: '0.375rem',
+            fontFamily: 'monospace',
+            fontSize: '0.875rem'
+          }}>
+            <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>
+              {fixResult.success ? 'RÉCUPÉRATION TERMINÉE !' : 'ÉCHEC RÉCUPÉRATION'}
+            </div>
+            
+            <div><strong>Message:</strong> {fixResult.message}</div>
+            
+            {fixResult.data && (
+              <div style={{ marginTop: '1rem' }}>
+                <div><strong>Résultat:</strong> {fixResult.data.fixed}/{fixResult.data.total} EA Match IDs récupérés</div>
+                
+                {fixResult.data.results && fixResult.data.results.length > 0 && (
+                  <div style={{ marginTop: '0.5rem' }}>
+                    <strong>Détails:</strong>
+                    <div style={{ marginLeft: '1rem', marginTop: '0.5rem' }}>
+                      {fixResult.data.results.map((result: any, index: number) => (
+                        <div key={index} style={{ marginBottom: '0.5rem', padding: '0.5rem', backgroundColor: '#f9fafb', borderRadius: '0.25rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span>
+                              {result.status === 'fixed' ? '✅' : 
+                               result.status === 'found_but_mismatch' ? '⚠️' : 
+                               result.status === 'not_found' ? '❌' : '⚠️'}
+                            </span>
+                            <strong>{result.homeClub} vs {result.awayClub}</strong>
+                          </div>
+                          {result.status === 'fixed' && result.eaMatchId && (
+                            <div style={{ fontSize: '0.75rem', color: '#10b981', marginTop: '0.25rem' }}>
+                              EA Match ID ajouté: {result.eaMatchId}
+                            </div>
+                          )}
+                          {result.status === 'found_but_mismatch' && result.details && (
+                            <div style={{ fontSize: '0.75rem', color: '#f59e0b', marginTop: '0.25rem' }}>
+                              Match trouvé mais scores différents: DB({result.details.dbScore}) vs EA({result.details.eaScore})
+                            </div>
+                          )}
+                          {result.status === 'not_found' && (
+                            <div style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '0.25rem' }}>
+                              Aucun match correspondant trouvé dans l'API EA Sports
+                            </div>
+                          )}
+                          {result.error && (
+                            <div style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '0.25rem' }}>
+                              Erreur: {result.error}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      
+      {/* Script de Migration - Synchronisation Joueurs */}
+      <div style={{ 
+        backgroundColor: 'white', 
+        padding: '1.5rem', 
+        borderRadius: '0.5rem', 
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+        marginBottom: '2rem'
+      }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem' }}>
+          ÉTAPE 2: Synchronisation Complète des Stats Joueurs
+        </h2>
+        
+        <p style={{ marginBottom: '1rem', color: '#6b7280' }}>
+          Ce script va synchroniser automatiquement tous les joueurs pour tous les matchs qui ont un EA Match ID.
+        </p>
+        
+        <button
+          onClick={syncAllPlayers}
+          disabled={loading}
+          style={{
+            backgroundColor: loading ? '#9ca3af' : '#059669',
+            color: 'white',
+            padding: '0.75rem 1.5rem',
+            borderRadius: '0.375rem',
+            border: 'none',
+            cursor: loading ? 'not-allowed' : 'pointer',
+            marginBottom: '1rem'
+          }}
+        >
+          {loading ? 'Synchronisation en cours...' : 'ÉTAPE 2: Synchroniser tous les joueurs'}
+        </button>
+        
+        {syncResult && (
+          <div style={{ 
+            backgroundColor: syncResult.success ? '#dcfce7' : '#fef2f2', 
+            border: `1px solid ${syncResult.success ? '#16a34a' : '#ef4444'}`,
+            padding: '1rem', 
+            borderRadius: '0.375rem',
+            fontFamily: 'monospace',
+            fontSize: '0.875rem'
+          }}>
+            <div style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>
+              {syncResult.success ? 'SYNCHRONISATION TERMINÉE !' : 'ÉCHEC SYNCHRONISATION'}
+            </div>
+            
+            <div><strong>Message:</strong> {syncResult.message}</div>
+            
+            {syncResult.data && (
+              <div style={{ marginTop: '1rem' }}>
+                <div><strong>Matchs traités:</strong> {syncResult.data.processed}/{syncResult.data.total}</div>
+                <div><strong>Joueurs créés:</strong> {syncResult.data.playersCreated}</div>
+                <div><strong>Joueurs mis à jour:</strong> {syncResult.data.playersUpdated}</div>
+                
+                {syncResult.data.results && syncResult.data.results.length > 0 && (
+                  <div style={{ marginTop: '0.5rem' }}>
+                    <strong>Détails par match:</strong>
+                    <div style={{ marginLeft: '1rem', marginTop: '0.5rem', maxHeight: '300px', overflowY: 'auto' }}>
+                      {syncResult.data.results.slice(0, 10).map((result: any, index: number) => (
+                        <div key={index} style={{ marginBottom: '0.5rem', padding: '0.5rem', backgroundColor: '#f9fafb', borderRadius: '0.25rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span>
+                              {result.status === 'synced' ? '✅' : 
+                               result.status === 'already_synced' ? 'ℹ️' : '❌'}
+                            </span>
+                            <strong>{result.homeClub} vs {result.awayClub}</strong>
+                          </div>
+                          {result.status === 'synced' && (
+                            <div style={{ fontSize: '0.75rem', color: '#10b981', marginTop: '0.25rem' }}>
+                              {result.playersCreated} créés, {result.playersUpdated} mis à jour
+                            </div>
+                          )}
+                          {result.status === 'already_synced' && (
+                            <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
+                              Déjà synchronisé ({result.existingStats} stats)
+                            </div>
+                          )}
+                          {result.error && (
+                            <div style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '0.25rem' }}>
+                              Erreur: {result.error}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      {syncResult.data.results.length > 10 && (
+                        <div style={{ fontSize: '0.75rem', color: '#6b7280', textAlign: 'center', marginTop: '0.5rem' }}>
+                          ... et {syncResult.data.results.length - 10} autres matchs
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
                 ))}
               </div>
             )}

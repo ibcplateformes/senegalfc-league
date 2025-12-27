@@ -171,6 +171,12 @@ export default function DebugSyncPage() {
                     <br />
                     &nbsp;&nbsp;EA Match ID: <code>{match.eaMatchId || 'MANQUANT ❌'}</code>
                   </div>
+                ))}              
+              </div>
+            )}
+          </div>
+        )}
+      </div>
       
       {/* Test Vraie Librairie EA Sports */}
       <div style={{ 

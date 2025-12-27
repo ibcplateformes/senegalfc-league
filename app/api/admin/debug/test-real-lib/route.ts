@@ -1,1 +1,146 @@
-import { NextRequest, NextResponse } from 'next/server';\n\nexport const dynamic = 'force-dynamic';\n\nexport async function GET() {\n  try {\n    console.log('🧪 === TEST NOUVELLE LIBRAIRIE EA SPORTS ===');\n    \n    const { EAFCApiService } = require('eafc-clubs-api');\n    const api = new EAFCApiService();\n    \n    const CLUB_ID = '40142'; // HOF 221\n    const PLATFORM = 'common-gen5'; // PS5\n    \n    console.log(`🎮 Test pour club ${CLUB_ID} sur ${PLATFORM}`);\n    \n    const results: any = {\n      clubId: CLUB_ID,\n      platform: PLATFORM,\n      tests: []\n    };\n    \n    // Test 1: Club Info\n    console.log('1️⃣  Test Club Info...');\n    try {\n      const clubInfoResponse = await api.clubInfo({\n        clubIds: CLUB_ID,\n        platform: PLATFORM\n      });\n      \n      const clubInfo = clubInfoResponse[CLUB_ID];\n      results.tests.push({\n        name: 'Club Info',\n        success: !!clubInfo,\n        data: clubInfo ? {\n          name: clubInfo.name,\n          clubId: clubInfo.clubId,\n          teamId: clubInfo.teamId\n        } : null\n      });\n      \n      console.log(`   ${clubInfo ? '✅ Succès' : '❌ Échec'}: ${clubInfo?.name || 'Pas de données'}`);\n    } catch (error) {\n      results.tests.push({\n        name: 'Club Info',\n        success: false,\n        error: error instanceof Error ? error.message : 'Unknown error'\n      });\n      console.log(`   ❌ Erreur: ${error}`);\n    }\n    \n    // Test 2: Member Stats\n    console.log('2️⃣  Test Member Stats...');\n    try {\n      const memberStats = await api.memberCareerStats({\n        clubId: CLUB_ID,\n        platform: PLATFORM\n      });\n      \n      const hasMembers = memberStats && memberStats.members && Object.keys(memberStats.members).length > 0;\n      const memberCount = hasMembers ? Object.keys(memberStats.members).length : 0;\n      \n      results.tests.push({\n        name: 'Member Stats',\n        success: hasMembers,\n        data: hasMembers ? {\n          memberCount,\n          sampleMember: Object.values(memberStats.members)[0]\n        } : null\n      });\n      \n      console.log(`   ${hasMembers ? '✅ Succès' : '❌ Échec'}: ${memberCount} membres trouvés`);\n    } catch (error) {\n      results.tests.push({\n        name: 'Member Stats',\n        success: false,\n        error: error instanceof Error ? error.message : 'Unknown error'\n      });\n      console.log(`   ❌ Erreur: ${error}`);\n    }\n    \n    // Test 3: Matches\n    console.log('3️⃣  Test Matches...');\n    try {\n      const matches = await api.matchesStats({\n        clubIds: CLUB_ID,\n        platform: PLATFORM,\n        matchType: 'leagueMatch'\n      });\n      \n      const hasMatches = Array.isArray(matches) && matches.length > 0;\n      \n      results.tests.push({\n        name: 'Matches',\n        success: hasMatches,\n        data: hasMatches ? {\n          matchCount: matches.length,\n          sampleMatch: {\n            matchId: matches[0]?.matchId,\n            timestamp: matches[0]?.timestamp,\n            clubs: Object.keys(matches[0]?.clubs || {})\n          }\n        } : null\n      });\n      \n      console.log(`   ${hasMatches ? '✅ Succès' : '❌ Échec'}: ${hasMatches ? matches.length : 0} matchs trouvés`);\n    } catch (error) {\n      results.tests.push({\n        name: 'Matches',\n        success: false,\n        error: error instanceof Error ? error.message : 'Unknown error'\n      });\n      console.log(`   ❌ Erreur: ${error}`);\n    }\n    \n    const successfulTests = results.tests.filter((t: any) => t.success);\n    const summary = {\n      total: results.tests.length,\n      successful: successfulTests.length,\n      failed: results.tests.length - successfulTests.length\n    };\n    \n    console.log(`🎉 Test terminé: ${summary.successful}/${summary.total} tests réussis`);\n    \n    return NextResponse.json({\n      success: summary.successful >= 2, // Au moins 2/3 tests doivent réussir\n      message: `Tests EA Sports: ${summary.successful}/${summary.total} réussis`,\n      data: {\n        ...results,\n        summary\n      }\n    });\n    \n  } catch (error) {\n    console.error('❌ Erreur test librairie EA Sports:', error);\n    \n    return NextResponse.json(\n      { \n        success: false, \n        error: 'Erreur lors du test de la librairie EA Sports',\n        details: error instanceof Error ? error.message : 'Erreur inconnue'\n      },\n      { status: 500 }\n    );\n  }\n}\n
+import { NextRequest, NextResponse } from 'next/server';
+
+export const dynamic = 'force-dynamic';
+
+export async function GET() {
+  try {
+    console.log('[DEBUG] === TEST NOUVELLE LIBRAIRIE EA SPORTS ===');
+    
+    const { EAFCApiService } = require('eafc-clubs-api');
+    const api = new EAFCApiService();
+    
+    const CLUB_ID = '40142'; // HOF 221
+    const PLATFORM = 'common-gen5'; // PS5
+    
+    console.log(`[DEBUG] Test pour club ${CLUB_ID} sur ${PLATFORM}`);
+    
+    const results: any = {
+      clubId: CLUB_ID,
+      platform: PLATFORM,
+      tests: []
+    };
+    
+    // Test 1: Club Info
+    console.log('[1] Test Club Info...');
+    try {
+      const clubInfoResponse = await api.clubInfo({
+        clubIds: CLUB_ID,
+        platform: PLATFORM
+      });
+      
+      const clubInfo = clubInfoResponse[CLUB_ID];
+      results.tests.push({
+        name: 'Club Info',
+        success: !!clubInfo,
+        data: clubInfo ? {
+          name: clubInfo.name,
+          clubId: clubInfo.clubId,
+          teamId: clubInfo.teamId
+        } : null
+      });
+      
+      console.log(`   ${clubInfo ? '[SUCCESS]' : '[FAILED]'}: ${clubInfo?.name || 'Pas de données'}`);
+    } catch (error) {
+      results.tests.push({
+        name: 'Club Info',
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      console.log(`   [ERROR]: ${error}`);
+    }
+    
+    // Test 2: Member Stats
+    console.log('[2] Test Member Stats...');
+    try {
+      const memberStats = await api.memberCareerStats({
+        clubId: CLUB_ID,
+        platform: PLATFORM
+      });
+      
+      const hasMembers = memberStats && memberStats.members && Object.keys(memberStats.members).length > 0;
+      const memberCount = hasMembers ? Object.keys(memberStats.members).length : 0;
+      
+      results.tests.push({
+        name: 'Member Stats',
+        success: hasMembers,
+        data: hasMembers ? {
+          memberCount,
+          sampleMember: Object.values(memberStats.members)[0]
+        } : null
+      });
+      
+      console.log(`   ${hasMembers ? '[SUCCESS]' : '[FAILED]'}: ${memberCount} membres trouvés`);
+    } catch (error) {
+      results.tests.push({
+        name: 'Member Stats',
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      console.log(`   [ERROR]: ${error}`);
+    }
+    
+    // Test 3: Matches
+    console.log('[3] Test Matches...');
+    try {
+      const matches = await api.matchesStats({
+        clubIds: CLUB_ID,
+        platform: PLATFORM,
+        matchType: 'leagueMatch'
+      });
+      
+      const hasMatches = Array.isArray(matches) && matches.length > 0;
+      
+      results.tests.push({
+        name: 'Matches',
+        success: hasMatches,
+        data: hasMatches ? {
+          matchCount: matches.length,
+          sampleMatch: {
+            matchId: matches[0]?.matchId,
+            timestamp: matches[0]?.timestamp,
+            clubs: Object.keys(matches[0]?.clubs || {})
+          }
+        } : null
+      });
+      
+      console.log(`   ${hasMatches ? '[SUCCESS]' : '[FAILED]'}: ${hasMatches ? matches.length : 0} matchs trouvés`);
+    } catch (error) {
+      results.tests.push({
+        name: 'Matches',
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+      console.log(`   [ERROR]: ${error}`);
+    }
+    
+    const successfulTests = results.tests.filter((t: any) => t.success);
+    const summary = {
+      total: results.tests.length,
+      successful: successfulTests.length,
+      failed: results.tests.length - successfulTests.length
+    };
+    
+    console.log(`[RESULT] Test terminé: ${summary.successful}/${summary.total} tests réussis`);
+    
+    return NextResponse.json({
+      success: summary.successful >= 2, // Au moins 2/3 tests doivent réussir
+      message: `Tests EA Sports: ${summary.successful}/${summary.total} réussis`,
+      data: {
+        ...results,
+        summary
+      }
+    });
+    
+  } catch (error) {
+    console.error('[ERROR] Erreur test librairie EA Sports:', error);
+    
+    return NextResponse.json(
+      { 
+        success: false, 
+        error: 'Erreur lors du test de la librairie EA Sports',
+        details: error instanceof Error ? error.message : 'Erreur inconnue'
+      },
+      { status: 500 }
+    );
+  }
+}
